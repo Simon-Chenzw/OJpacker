@@ -1,0 +1,25 @@
+{
+    "version": "v1.0.0",
+    "ignore_version": [],
+    "default_zip_name": "problem_data",
+    "default_input_exec_type": "py",
+    "default_output_exec_type": "cpp",
+    "script_name": "work.py",
+    "states_name": "states",
+    "input_file_name": "data%d.in",
+    "output_file_name": "data%d.out",
+    "input_exec_name_list": {
+        "py": "make_in.py",
+        "cpp": "make_in.cpp"
+    },
+    "output_exec_name_list": {
+        "py": "make_out.py",
+        "cpp": "make_out.cpp"
+    },
+    "compile_cmd": {
+        "_comment": "file_head is the name you set in exec_name_list without suffix",
+        "cpp": "g++ {file_head}.cpp -o {file_head}.out -std=c++17 -O3 2>&1"
+    },
+    "zip_cmd": "cd temp && zip -q -m -r ../{zip_name}.zip .",
+    "github_url": "https://api.github.com/repos/Simon-Chenzw/data_maker/releases"
+}
