@@ -23,10 +23,14 @@ class file_info:
 
     def __init__(self):
         # load json
+        if not os.path.isfile(self.config_json):
+            make_default_json(self.config_json)
         with open(self.config_json, 'r') as json_file:
             self.json_data = json.load(json_file)
         # load arg
         self.option = get_parser(self.json_data).parse_args()
+        if self.option.make_default_json:
+            make_default_json(self.config_json)
         # check update
         if self.option.install_latest:
             self.option.install_version = "latest"
@@ -143,6 +147,11 @@ def get_parser(json_data):
                               help="get the selected version",
                               metavar="version",
                               dest="install_version")
+    # 创建默认json
+    parser.add_argument("-make_json",
+                        action='store_true',
+                        help="make default json file",
+                        dest="make_default_json")
     return parser
 
 
@@ -200,6 +209,48 @@ def upgrade_script(arg, version):
     print("Use \"-get " + old_version + "\" to back to old version")
     print("version " + version_json["tag_name"] + " depiction:\n" +
           version_json["body"])
+
+
+def make_default_json(json_name):
+    json_data = {
+        'version':
+        'v1.0.0',
+        'ignore_version': [],
+        'default_zip_name':
+        'problem_data',
+        'default_input_exec_type':
+        'py',
+        'default_output_exec_type':
+        'cpp',
+        'script_name':
+        'work.py',
+        'states_name':
+        'states',
+        'input_file_name':
+        'data%d.in',
+        'output_file_name':
+        'data%d.out',
+        'input_exec_name_list': {
+            'py': 'make_in.py',
+            'cpp': 'make_in.cpp'
+        },
+        'output_exec_name_list': {
+            'py': 'make_out.py',
+            'cpp': 'make_out.cpp'
+        },
+        'compile_cmd': {
+            '_comment':
+            'file_head is the name you set in exec_name_list without suffix',
+            'cpp': 'g++ {file_head}.cpp -o {file_head}.out -std=c++17 -O3 2>&1'
+        },
+        'zip_cmd':
+        'cd temp && zip -q -m -r ../{zip_name}.zip .',
+        'github_url':
+        'https://api.github.com/repos/Simon-Chenzw/data_maker/releases'
+    }
+    with open(json_name, 'w') as json_file:
+        json.dump(json_data, json_file, indent=4)
+    exit()
 
 
 def Progress_Bar(output_str, print_cnt=True, is_begin=True):
