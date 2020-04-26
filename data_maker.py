@@ -197,14 +197,14 @@ def upgrade_script(arg, version):
         file_name = asset["name"]
         print("Download " + file_name)
         res = download(download_url)
-        if asset["name"] == "Main_script.py":
-            asset["name"] = arg.config_json["script_name"]
+        if asset["name"] == "data_maker.py":
+            asset["name"] = arg.json_data["script_name"]
         with open(file_name, "wb") as fl:
             fl.write(res.content)
     # 更改json 版本
     with open(arg.config_json, 'w') as json_file:
         arg.json_data["version"] = version_json["tag_name"]
-        json.dump(arg.config_json, json_file, indent=4)
+        json.dump(arg.json_data, json_file, indent=4)
     print("Successfully get the version: " + version)
     print("Use \"-get " + old_version + "\" to back to old version")
     print("version " + version_json["tag_name"] + " depiction:\n" +
