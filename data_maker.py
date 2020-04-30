@@ -408,7 +408,7 @@ class tool:
             res = download(asset["browser_download_url"])
             with open(file_name, "wb") as fl:
                 fl.write(res.content)
-        print("Successfully get the version:", version)
+        print("Successfully get the version:", version_json["tag_name"])
         print("Use \"-get %s\" to back to old version" % arg.version)
         print("Version", version_json["tag_name"],
               "description:\n" + version_json["body"])
