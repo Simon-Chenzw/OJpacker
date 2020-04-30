@@ -13,7 +13,7 @@ class config_json:
     # Do not remove the comments below
     # json_name below
     json_name = "config.json"
-    version = 'v1.1.2'
+    version = 'v1.1.1'
     # start of default json_data
     json_data = {
         'ignore_version': [],
@@ -65,8 +65,7 @@ class config_json:
             )
             print("Use default config")
         except FileNotFoundError:
-            # print(f"\"{self.json_name}\" not found, use default config")
-            pass
+            print(f"\"{self.json_name}\" not found, use default config")
 
     def dump_default_json(self):
         if os.path.isfile(self.json_name):
@@ -102,7 +101,6 @@ class config_json:
         os.system("chmod +x %s" % self.script_name)
 
     def change_json_name(self, new_name):
-        print("Change config file's name to", new_name)
         with open(self.script_name, 'r') as fin:
             codes = [line for line in fin]
         for i in range(len(codes)):
@@ -110,7 +108,6 @@ class config_json:
                 codes[i + 1] = f"    json_name = \"{new_name}\"\n"
         with open(self.script_name, 'w') as fout:
             fout.writelines(codes)
-        print("Successfully changed")
 
 
 class argument:
@@ -234,6 +231,7 @@ class config(config_json, argument):
         self.get_states()
 
     def analyze_scipt_option(self):
+        print(self.option.install_version, self.option.change_json_name)
         if self.option.install_latest:
             tool.download_version(self, "latest")
             exit()
@@ -354,7 +352,7 @@ class tool:
         print("Successfully get the version:", version)
         print("Use \"-get %s\" to back to old version" % arg.version)
         print("Version", version_json["tag_name"],
-              "description:\n" + version_json["body"])
+              "depiction:\n" + version_json["body"])
 
 
 class Progress_Bar:
