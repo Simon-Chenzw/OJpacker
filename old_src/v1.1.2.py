@@ -2,22 +2,18 @@
 
 import os
 import sys
-import stat
 import time
 import json
-import shutil
-import platform
 import requests
 import argparse
 import threading
-import subprocess
 
 
 class config_json:
     # Do not remove the comments below
     # json_name below
     json_name = "config.json"
-    version = 'v1.2.0'
+    version = 'v1.1.2'
     # start of default json_data
     json_data = {
         'ignore_version': [],
@@ -46,12 +42,6 @@ class config_json:
             'file_head is the name you set in exec_name_list without suffix',
             'cpp': 'g++ {file_head}.cpp -o {file_head}.out -std=c++17 -O3 2>&1'
         },
-        'exec_cmd': {
-            '_comment':
-            'file_head is the name you set in exec_name_list without suffix',
-            'py': 'python3 {file_head}.py',
-            'cpp': './{file_head}.out'
-        },
         'zip_cmd':
         'cd temp && zip -q -m -r ../{zip_name}.zip .',
         'github_url':
@@ -76,11 +66,7 @@ class config_json:
             print("Use default config")
         except FileNotFoundError:
             # print(f"\"{self.json_name}\" not found, use default config")
-            if platform.system().lower() == "Windows":
-                print(
-                    "please use \"-config_dump\" and change \"compile_cmd exec_cmd zip_cmd\" for your platform"
-                )
-                exit()
+            pass
 
     def dump_default_json(self):
         if os.path.isfile(self.json_name):
@@ -97,7 +83,7 @@ class config_json:
               "Before loading, please make sure that your json",
               "is in the format used by the current version.")
         print("You can use \"-config_dump\" to dump default json.")
-        input(tool.colorful("-----press enter to continue-----", "red"))
+        input("\033[31m" + "-----press enter to continue-----" + "\033[0m")
         with open(self.script_name, 'r') as fin:
             codes = [line for line in fin]
         os.rename(self.script_name, "old_" + self.script_name)
@@ -113,7 +99,7 @@ class config_json:
                              str(self.json_data), "\n"] +
                             codes[default_json_end:])
         print("The default json in the script has been updated")
-        os.chmod(self.script_name, stat.S_IXUSR)
+        os.system("chmod +x %s" % self.script_name)
 
     def change_json_name(self, new_name):
         print("Change config file's name to", new_name)
@@ -292,8 +278,10 @@ class config(config_json, argument):
             self.option.output_exec_type]
 
     def exec(self, file_type, file_name):
-        return self.json_data["exec_cmd"][file_type].format(
-            file_head=os.path.splitext(file_name)[0])
+        if file_type == "py":
+            return "python3 " + file_name
+        if file_type == "cpp":
+            return f"./{file_name[:-4]}.out"
 
     def input_exec(self):
         return self.exec(self.option.input_exec_type, self.input_exec_name())
@@ -306,56 +294,11 @@ class tool:
     @staticmethod
     def yesorno(output_str):
         while True:
-            s = input(tool.colorful(output_str + " [Y/n] ", "purple"))
+            s = input("\033[0;35m" + output_str + " [Y/n] " + "\033[0m")
             if s in "Yy":
                 return True
             elif s in "Nn":
                 return False
-
-    @staticmethod
-    def colorful(string, color):
-        if platform.system().lower() == "linux":
-            color_code = {
-                "none": "\033[0m",
-                "black": "\033[0;30m",
-                "dark_gray": "\033[1;30m",
-                "blue": "\033[0;34m",
-                "light_blue": "\033[1;34m",
-                "green": "\033[0;32m",
-                "light_green": "\033[1;32m",
-                "cyan": "\033[0;36m",
-                "light_cyan": "\033[1;36m",
-                "red": "\033[0;31m",
-                "light_red": "\033[1;31m",
-                "purple": "\033[0;35m",
-                "light_purple": "\033[1;35m",
-                "yellow": "\033[0;33m",
-                "light_yellow": "\033[1;33m",
-                "white": "\033[0;37m",
-                "light_white": "\033[1;37m"
-            }
-            return color_code[color] + string + color_code["none"]
-        else:
-            return string
-
-    @staticmethod
-    def check_empty(check_list):
-        have_err = False
-        for file_name in check_list:
-            if os.path.getsize(file_name) == 0:
-                print(tool.colorful(file_name + " is empty", "purple"))
-                have_err = True
-        if have_err:
-            input(tool.colorful("-----存在空文件---按回车继续-----", "yellow"))
-
-    @staticmethod
-    def readable_byte(value):
-        unit = ["B", "KB", "MB", "GB"]
-        level = 0
-        while (value >= 1024):
-            value /= 1024
-            level += 1
-        return "%.2f %s" % (value, unit[level])
 
     @staticmethod
     def download_version(arg, version):
@@ -371,7 +314,7 @@ class tool:
 
         print("Warning: It will change your default config in the script.")
         print("You can use \"-config_dump\" to dump your default json.")
-        input(tool.colorful("-----press enter to continue-----", "red"))
+        input("\033[31m" + "-----press enter to continue-----" + "\033[0m")
         print("Current version :", arg.version)
         print("Upgrade to :", version)
         if version == "latest":
@@ -460,18 +403,18 @@ class workflow(config):
         self.make_output_data()
         self.zipped()
         self.clean()
-        print(tool.colorful("-----完成-----", "red"))
+        print("\033[31m" + "-----完成-----" + "\033[0m")
 
     def make_temp_dir(self):
         if "in" in self.option.skip:
             return
         if os.path.isdir("temp"):
-            shutil.rmtree("temp")
-        os.mkdir("temp")
+            os.system("rm -rf temp")
+        os.system("mkdir temp")
 
     def pre_compile(self):
         def cpp_compile(file_name):
-            file_head = os.path.splitext(file_name)[0]
+            file_head = file_name[:-4]
             print(f"编译 {file_head}.cpp")
             message = os.popen(self.json_data["compile_cmd"]["cpp"].format(
                 file_head=file_head)).read()
@@ -480,7 +423,7 @@ class workflow(config):
             # if message.count("warning") != 0:
             print("%5d warning" % message.count("warning"))
             if message.count("error") > 0:
-                print(tool.colorful("-----编译错误-----", "red"))
+                print("\033[0;31m" + "-----编译错误-----" + "\033[0m")
                 print(message)
                 exit()
             self.garbage.append(file_head + ".out")
@@ -489,6 +432,18 @@ class workflow(config):
             cpp_compile(self.input_exec_name())
         if self.option.output_exec_type == "cpp":
             cpp_compile(self.output_exec_name())
+
+    @staticmethod
+    def check_empty(check_list):
+        have_err = False
+        for file_name in check_list:
+            message = os.popen(f"wc -c temp/{file_name}").read().split()
+            if message[0] == '0':
+                print("\033[0;35m" + f"{message[-1].split('/')[-1]} is empty" +
+                      "\033[0m")
+                have_err = True
+        if have_err:
+            input("\033[0;33m" + "-----存在空文件---按回车继续-----" + "\033[0m")
 
     def make_input_data(self):
         if "in" in self.option.skip:
@@ -500,27 +455,18 @@ class workflow(config):
         bar = Progress_Bar("数据生成中")
         for i in range(len(self.states)):
             bar.increase()
-            file_output = open(os.path.join("temp", self.input_file(i + 1)),
-                               'w')
-            popen = subprocess.Popen(self.input_exec().split(),
-                                     stdin=subprocess.PIPE,
-                                     stdout=file_output,
-                                     universal_newlines=True)
-            popen.stdin.write(self.states[i])
-            popen.stdin.close()
-            popen.wait()
-            file_output.close()
+            os.system(
+                f"echo {self.states[i]} | {self.input_exec()} >temp/{self.input_file(i+1)}"
+            )
         bar.end()
-        print(f"数据生成完成: {len(self.states)}")
+        print(f"数据生成完成: {len(self.states)}" + "\033[K")
         #编辑input
         if self.option.input_edit_num >= 0:
             for i in range(self.option.input_edit_num, 0, -1):
                 os.system(f"code temp/{self.input_file(i)}")
             input("-----等待更改完成---按回车继续-----")
-        tool.check_empty([
-            os.path.join("temp", self.input_file(i + 1))
-            for i in range(len(self.states))
-        ])
+        self.check_empty(
+            [self.input_file(i + 1) for i in range(len(self.states))])
 
     def make_output_data(self):
         if "out" in self.option.skip:
@@ -531,30 +477,19 @@ class workflow(config):
         bar = Progress_Bar("结果生成中")
         for i in range(len(self.states)):
             bar.increase()
-            file_input = open(os.path.join("temp", self.input_file(i + 1)),
-                              'r')
-            file_output = open(os.path.join("temp", self.output_file(i + 1)),
-                               'w')
-            popen = subprocess.Popen(self.output_exec().split(),
-                                     stdin=file_input,
-                                     stdout=file_output,
-                                     universal_newlines=True)
-            popen.wait()
-            file_input.close()
-            file_output.close()
+            os.system(
+                f"{self.output_exec()} < temp/{self.input_file(i+1)} > temp/{self.output_file(i+1)}"
+            )
         bar.end()
-        print(f"结果生成完成: {len(self.states)}")
+        print(f"结果生成完成: {len(self.states)}" + "\33[K")
         #check empty
-        tool.check_empty([
-            os.path.join("temp", self.output_file(i + 1))
-            for i in range(len(self.states))
-        ])
+        self.check_empty(
+            [self.output_file(i + 1) for i in range(len(self.states))])
         #print output
         if self.option.output_print:
             for i in range(1, len(self.states) + 1):
-                with open(os.path.join("temp", self.output_file(i)),
-                          'r') as fp:
-                    file_content = fp.readline()
+                file_content = os.popen(
+                    f"head -n 1 temp/{self.output_file(i)}").read()
                 if len(file_content) > 50:
                     file_content = file_content[:50] + "..."
                 if len(file_content) > 0 and file_content[-1] == '\n':
@@ -567,15 +502,11 @@ class workflow(config):
             print(self.json_data["zip_cmd"].format(zip_name=self.option.name))
             return
         if "in_exec" in self.option.zip_file:
-            shutil.copyfile(self.input_exec_name(),
-                            os.path.join("temp", self.input_exec_name()))
+            os.system("cp %s temp" % self.input_exec_name())
         if "out_exec" in self.option.zip_file:
-            shutil.copyfile(self.output_exec_name(),
-                            os.path.join("temp", self.output_exec_name()))
+            os.system("cp %s temp" % self.output_exec_name())
         if "states" in self.option.zip_file:
-            shutil.copyfile(
-                self.json_data["states_name"],
-                os.path.join("temp", self.json_data["states_name"]))
+            os.system("cp %s temp" % self.json_data["states_name"])
         zip_name = self.option.name
         if os.path.isfile(zip_name + ".zip"):
             if not tool.yesorno("是否覆盖已有Zip?(%s)" % zip_name):
@@ -583,15 +514,14 @@ class workflow(config):
                     zip_name = "new_" + zip_name
         bar = Progress_Bar("打包数据中", print_cnt=False)
         os.system(self.json_data["zip_cmd"].format(zip_name=zip_name))
+        zip_size = os.popen(f"ls -lh | grep {zip_name}.zip").read().split()[4]
         bar.end()
-        zip_size = tool.readable_byte(os.path.getsize(zip_name + ".zip"))
         print(f"打包数据完成:  {zip_name}.zip  {zip_size}" + "\33[K")
 
     def clean(self, clean_temp_dir=True):
-        if clean_temp_dir:
-            shutil.rmtree("temp")
+        if clean_temp_dir: os.system("rm -rf temp")
         for file_name in self.garbage:
-            os.remove(file_name)
+            os.system("rm %s" % file_name)
 
 
 if __name__ == "__main__":
@@ -599,8 +529,6 @@ if __name__ == "__main__":
         work = workflow()
         work.work()
     except KeyboardInterrupt:
-        try:
+        if "work" in dir():
             work.clean(clean_temp_dir=False)
-        except:
-            pass
         print()
