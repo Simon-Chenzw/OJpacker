@@ -10,10 +10,10 @@ import threading
 
 
 class config_json:
-    # Do not remove the comments below
-    # json_name below
-    json_name = "test.json"
-    version = 'v1.1.1'
+    json_name = "config.json"
+    script_name = "data_maker.py"
+    version = 'v1.1.0'
+    # Do not remove the two comments below
     # start of default json_data
     json_data = {
         'ignore_version': [],
@@ -99,15 +99,6 @@ class config_json:
                             codes[default_json_end:])
         print("The default json in the script has been updated")
         os.system("chmod +x %s" % self.script_name)
-
-    def change_json_name(self, new_name):
-        with open(self.script_name, 'r') as fin:
-            codes = [line for line in fin]
-        for i in range(len(codes)):
-            if codes[i] == "    # json_name below\n":
-                codes[i + 1] = f"    json_name = \"{new_name}\"\n"
-        with open(self.script_name, 'w') as fout:
-            fout.writelines(codes)
 
 
 class argument:
@@ -197,7 +188,7 @@ class argument:
         # 通过github安装
         script_option_group.add_argument("-get",
                                          nargs=1,
-                                         default=["not_upgrade"],
+                                         default="not_upgrade",
                                          help="get the selected version",
                                          metavar="version",
                                          dest="install_version")
@@ -211,12 +202,6 @@ class argument:
             action='store_true',
             help="load json file and save as default config",
             dest="json_load_default")
-        script_option_group.add_argument("-config_name",
-                                         nargs=1,
-                                         default=["not_change"],
-                                         help="change the config name",
-                                         metavar="NEW_NAME",
-                                         dest="change_json_name")
         return parser
 
 
@@ -231,15 +216,11 @@ class config(config_json, argument):
         self.get_states()
 
     def analyze_scipt_option(self):
-        print(self.option.install_version, self.option.change_json_name)
         if self.option.install_latest:
             tool.download_version(self, "latest")
             exit()
-        if self.option.install_version[0] != "not_upgrade":
-            tool.download_version(self, self.option.install_version[0])
-            exit()
-        if self.option.change_json_name[0] != "not_change":
-            self.change_json_name(self.option.change_json_name[0])
+        if self.option.install_version != "not_upgrade":
+            tool.download_version(self, self.option.install_version)
             exit()
         if self.option.json_dump_default:
             self.dump_default_json()
@@ -292,7 +273,7 @@ class tool:
     @staticmethod
     def yesorno(output_str):
         while True:
-            s = input("\033[0;35m" + output_str + " [Y/n] " + "\033[0m")
+            s = input("\033[0;35m" + output_str + "[Y/n] " + "\033[0m")
             if s in "Yy":
                 return True
             elif s in "Nn":
@@ -307,34 +288,35 @@ class tool:
             try:
                 return ses.get(url)
             except:
-                print("fail to get from :\n", "   ", url)
+                print("fail to get from :\n    " + url)
                 exit()
 
         print("Warning: It will change your default config in the script.")
         print("You can use \"-config_dump\" to dump your default json.")
         input("\033[31m" + "-----press enter to continue-----" + "\033[0m")
-        print("Current version :", arg.version)
-        print("Upgrade to :", version)
+        print("Current version : " + arg.version)
+        print("Upgrade to : " + version)
         if version == "latest":
             api_url = arg.json_data["github_url"] + "/latest"
         else:
             api_url = arg.json_data["github_url"] + "/tags/" + version
-        print("Get", version, "version description from :\n" + "   ", api_url)
+        print("Get " + version + " version description from :\n    " + api_url)
         version_json = download(api_url).json()
         # api_url 获取错误
         if "message" in version_json:
-            print("Api message:", version_json["message"])
+            print("Api message: " + version_json["message"])
             print("Check the url or the version name")
             return
         # 需要更新至最新版 但已经是最新版
         if version == "latest" and version_json["tag_name"] == arg.version:
             print("Already the latest version")
-            print("Use \"-get %s\" to compulsory upgrade" % arg.version)
+            print("Use \"-get " + arg.version + "\" to compulsory upgrade")
             return
         # ignore version
         if version == "latest" and version_json["tag_name"] in arg.json_data[
                 "ignore_version"]:
-            print("Latest version is %s. Ignored" % version_json["tag_name"])
+            print("Latest version is \"" + version_json["tag_name"] +
+                  "\".Is the ignored version")
             return
         print("Successfully get version json, download file")
         for asset in version_json["assets"]:
@@ -344,15 +326,15 @@ class tool:
             else:
                 while os.path.isfile(file_name):
                     file_name = "new_" + file_name
-            print("Download \"%s\" and save as \"%s\"" %
-                  (asset["name"], file_name))
+            print("Download \"" + asset["name"] + "\" and save as \"" +
+                  file_name + "\"")
             res = download(asset["browser_download_url"])
             with open(file_name, "wb") as fl:
                 fl.write(res.content)
-        print("Successfully get the version:", version)
-        print("Use \"-get %s\" to back to old version" % arg.version)
-        print("Version", version_json["tag_name"],
-              "depiction:\n" + version_json["body"])
+        print("Successfully get the version: " + version)
+        print("Use \"-get " + arg.version + "\" to back to old version")
+        print("Version " + version_json["tag_name"] + " depiction:\n" +
+              version_json["body"])
 
 
 class Progress_Bar:
@@ -372,13 +354,14 @@ class Progress_Bar:
         time.sleep(0.1)
         if self.print_cnt:
             while self.cnt != -1:
-                print("%s:%3d %c\r" % (self.output_str, self.cnt, char[i % 4]),
+                print("\r%s:%3d %c   " %
+                      (self.output_str, self.cnt, char[i % 4]),
                       end='')
                 i += 1
                 time.sleep(0.1)
         else:
             while self.cnt != -1:
-                print("%s:  %c\r" % (self.output_str, char[i % 4]), end='')
+                print("\r%s:   %c   " % (self.output_str, char[i % 4]), end='')
                 i += 1
                 time.sleep(0.1)
 
@@ -457,7 +440,7 @@ class workflow(config):
                 f"echo {self.states[i]} | {self.input_exec()} >temp/{self.input_file(i+1)}"
             )
         bar.end()
-        print(f"数据生成完成: {len(self.states)}" + "\033[K")
+        print("\r" + f"数据生成完成: {len(self.states)}" + "\033[K")
         #编辑input
         if self.option.input_edit_num >= 0:
             for i in range(self.option.input_edit_num, 0, -1):
@@ -479,7 +462,7 @@ class workflow(config):
                 f"{self.output_exec()} < temp/{self.input_file(i+1)} > temp/{self.output_file(i+1)}"
             )
         bar.end()
-        print(f"结果生成完成: {len(self.states)}" + "\33[K")
+        print("\r" + f"结果生成完成: {len(self.states)}" + "\33[K")
         #check empty
         self.check_empty(
             [self.output_file(i + 1) for i in range(len(self.states))])
@@ -506,15 +489,15 @@ class workflow(config):
         if "states" in self.option.zip_file:
             os.system("cp %s temp" % self.json_data["states_name"])
         zip_name = self.option.name
-        if os.path.isfile(zip_name + ".zip"):
-            if not tool.yesorno("是否覆盖已有Zip?(%s)" % zip_name):
-                while os.path.isfile(zip_name + ".zip"):
+        if os.path.isfile(zip_name):
+            if not tool.yesorno("是否覆盖已有Zip?"):
+                while os.path.isfile(zip_name):
                     zip_name = "new_" + zip_name
         bar = Progress_Bar("打包数据中", print_cnt=False)
         os.system(self.json_data["zip_cmd"].format(zip_name=zip_name))
         zip_size = os.popen(f"ls -lh | grep {zip_name}.zip").read().split()[4]
         bar.end()
-        print(f"打包数据完成:  {zip_name}.zip  {zip_size}" + "\33[K")
+        print("\r" + f"打包数据完成:  {zip_name}.zip  {zip_size}" + "\33[K")
 
     def clean(self, clean_temp_dir=True):
         if clean_temp_dir: os.system("rm -rf temp")
@@ -525,8 +508,11 @@ class workflow(config):
 if __name__ == "__main__":
     try:
         work = workflow()
-        work.work()
     except KeyboardInterrupt:
-        if "work" in dir():
-            work.clean(clean_temp_dir=False)
         print()
+    else:
+        try:
+            work.work()
+        except KeyboardInterrupt:
+            work.clean(clean_temp_dir=False)
+            print()
