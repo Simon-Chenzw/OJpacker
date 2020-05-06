@@ -12,12 +12,11 @@ import argparse
 import threading
 import subprocess
 
+version = 'v1.3.0'
 
-class config_json:
+
+class config:
     # Do not remove the comments below
-    # json_name below
-    json_name = "config.json"
-    version = 'v1.2.0'
     # start of default json_data
     json_data = {
         'ignore_version': [],
@@ -27,8 +26,8 @@ class config_json:
         'py',
         'default_output_exec_type':
         'cpp',
-        'states_name':
-        'states',
+        'state_name':
+        'state',
         'input_file_name':
         'data%d.in',
         'output_file_name':
@@ -60,12 +59,13 @@ class config_json:
 
     # end of default json_data
 
-    def __init__(self):
-        self.default_json_data_str = json.dumps(self.json_data, indent=4)
+    def __init__(self, json_name="config.json"):
+        self.json_name = json_name
         self.load_json()
-        self.script_name = sys.argv[0].split('/')[-1]
+        # self.script_name = sys.argv[0].split('/')[-1]
 
     def load_json(self):
+        self.default_json_data_str = json.dumps(self.json_data, indent=4)
         try:
             with open(self.json_name, 'r') as json_file:
                 self.json_data.update(json.load(json_file))
@@ -92,47 +92,16 @@ class config_json:
             fp.write(self.default_json_data_str)
         print("Default json has been dumped to \"%s\"" % self.json_name)
 
-    def load_default_json(self):
-        print("Warning: This is a dangerous operation.",
-              "Before loading, please make sure that your json",
-              "is in the format used by the current version.")
-        print("You can use \"-config_dump\" to dump default json.")
-        input(tool.colorful("-----press enter to continue-----", "red"))
-        with open(self.script_name, 'r') as fin:
-            codes = [line for line in fin]
-        os.rename(self.script_name, "old_" + self.script_name)
-        print("Old script has been saved as \"old_%s\"" % self.script_name)
-        for i in range(len(codes)):
-            if codes[i] == "    # start of default json_data\n":
-                default_json_start = i
-            if codes[i] == "    # end of default json_data\n":
-                default_json_end = i
-        with open(self.script_name, 'w') as fout:
-            fout.writelines(codes[:default_json_start + 1] +
-                            ["    json_data = ",
-                             str(self.json_data), "\n"] +
-                            codes[default_json_end:])
-        print("The default json in the script has been updated")
-        os.chmod(self.script_name, stat.S_IXUSR)
-
-    def change_json_name(self, new_name):
-        print("Change config file's name to", new_name)
-        with open(self.script_name, 'r') as fin:
-            codes = [line for line in fin]
-        for i in range(len(codes)):
-            if codes[i] == "    # json_name below\n":
-                codes[i + 1] = f"    json_name = \"{new_name}\"\n"
-        with open(self.script_name, 'w') as fout:
-            fout.writelines(codes)
-        print("Successfully changed")
-
 
 class argument:
-    def __init__(self, json_data):
-        self.option = self.get_parser(json_data).parse_args()
+    def __init__(self, args_str=None):
+        if args_str == None:
+            self.option = self.get_parser().parse_args()
+        else:
+            self.option = self.get_parser().parse_args(args_str)
 
     @staticmethod
-    def get_parser(json_data):
+    def get_parser():
         # guide https://docs.python.org/3/library/argparse.html
         # help
         parser = argparse.ArgumentParser(
@@ -146,7 +115,7 @@ class argument:
         # 压缩包名字
         work_option_group.add_argument("name",
                                        nargs='?',
-                                       default=json_data["default_zip_name"],
+                                       default="_default_zip_name",
                                        help="name of the zip")
         # 修改的in文件个数
         work_option_group.add_argument(
@@ -166,26 +135,24 @@ class argument:
             help="print the detail of all output file",
             dest="output_print")
         # 构造in的语言类型
-        work_option_group.add_argument(
-            "-input",
-            default=json_data["default_input_exec_type"],
-            choices=['py', 'cpp'],
-            help="the language that make input",
-            dest="input_exec_type")
+        work_option_group.add_argument("-input",
+                                       default="_default_input_exec_type",
+                                       choices=['py', 'cpp'],
+                                       help="the language that make input",
+                                       dest="input_exec_type")
         # 构造out的语言类型
-        work_option_group.add_argument(
-            "-output",
-            default=json_data["default_output_exec_type"],
-            choices=['py', 'cpp'],
-            help="the language that make output",
-            dest="output_exec_type")
+        work_option_group.add_argument("-output",
+                                       default="_default_output_exec_type",
+                                       choices=['py', 'cpp'],
+                                       help="the language that make output",
+                                       dest="output_exec_type")
         # 需要打包至zip中的文件
         work_option_group.add_argument(
             "-zip",
             nargs='+',
             default=[],
-            choices=["in", "out", "states"],
-            help="FILE={in,out,states} file(s) put into the zip. " +
+            choices=["in", "out", "state", "extra"],
+            help="FILE={in,out,state} file(s) put into the zip. " +
             "\"in\" means the code of making input" +
             "\"out\" means the code of making output",
             metavar="FILE",
@@ -219,87 +186,88 @@ class argument:
                                          metavar="version",
                                          dest="install_version")
         # 默认json相关
-        script_option_group.add_argument("-config_dump",
+        script_option_group.add_argument("-json_dump",
                                          action='store_true',
                                          help="make default json file",
                                          dest="json_dump_default")
-        script_option_group.add_argument(
-            "-config_load",
-            action='store_true',
-            help="load json file and save as default config",
-            dest="json_load_default")
-        script_option_group.add_argument("-config_name",
-                                         nargs=1,
-                                         default=["not_change"],
-                                         help="change the config name",
-                                         metavar="NEW_NAME",
-                                         dest="change_json_name")
         return parser
 
 
-class config(config_json, argument):
-    states = list()
-    garbage = list()
+class explainer(config, argument):
+    zip_list = list()
 
-    def __init__(self):
-        config_json.__init__(self)
-        argument.__init__(self, self.json_data)
+    def __init__(self, json_name="config.json", args_str=None):
+        config.__init__(self, json_name)
+        argument.__init__(self, args_str)
         self.analyze_scipt_option()
-        self.get_states()
+        self.add_zip_list()
+
+    def add_zip_list(self):
+        if "in" in self.option.zip_file:
+            self.zip_list.append(self.input_exec_name())
+        if "out" in self.option.zip_file:
+            self.zip_list.append(self.output_exec_name())
+        if "state" in self.option.zip_file:
+            self.zip_list.append(self.json_data["state_name"])
+        if "extra" in self.option.zip_file:
+            self.zip_list += input("input extra zip file list:").split()
 
     def analyze_scipt_option(self):
         if self.option.install_latest:
-            tool.download_version(self, "latest")
+            tool.download_version(self.json_data["github_url"], "latest",
+                                  self.json_data["ignore_version"])
             exit()
         if self.option.install_version[0] != "not_upgrade":
-            tool.download_version(self, self.option.install_version[0])
-            exit()
-        if self.option.change_json_name[0] != "not_change":
-            self.change_json_name(self.option.change_json_name[0])
+            tool.download_version(self.json_data["github_url"],
+                                  self.option.install_version[0],
+                                  self.json_data["ignore_version"])
             exit()
         if self.option.json_dump_default:
             self.dump_default_json()
             exit()
-        if self.option.json_load_default:
-            self.load_default_json()
-            exit()
         if self.option.print_version:
-            print("Version :", self.version)
+            print("Version :", version)
             exit()
 
-    def get_states(self):
-        try:
-            with open(self.json_data["states_name"], mode='r') as states_file:
-                for line in states_file.read().split('\n'):
-                    if line != "":
-                        self.states.append(line)
-        except FileNotFoundError:
-            print("\"%s\" not found" % self.json_data["states_name"])
-            exit()
+    def zip_name(self):
+        if self.option.name != "_default_zip_name":
+            return self.option.name
+        else:
+            return self.json_data["default_zip_name"]
 
-    def input_file(self, num):
+    def input_name(self, num):
         return self.json_data["input_file_name"] % num
 
-    def output_file(self, num):
+    def output_name(self, num):
         return self.json_data["output_file_name"] % num
 
+    def input_exec_type(self):
+        if self.option.input_exec_type != "_default_input_exec_type":
+            return self.option.input_exec_type
+        else:
+            return self.json_data["default_input_exec_type"]
+
+    def output_exec_type(self):
+        if self.option.output_exec_type != "_default_output_exec_type":
+            return self.option.output_exec_type
+        else:
+            return self.json_data["default_output_exec_type"]
+
     def input_exec_name(self):
-        return self.json_data["input_exec_name_list"][
-            self.option.input_exec_type]
+        return self.json_data["input_exec_name_list"][self.input_exec_type()]
 
     def output_exec_name(self):
-        return self.json_data["output_exec_name_list"][
-            self.option.output_exec_type]
+        return self.json_data["output_exec_name_list"][self.output_exec_type()]
 
-    def exec(self, file_type, file_name):
+    def exec_cmd(self, file_type, file_name):
         return self.json_data["exec_cmd"][file_type].format(
             file_head=os.path.splitext(file_name)[0])
 
-    def input_exec(self):
-        return self.exec(self.option.input_exec_type, self.input_exec_name())
+    def input_exec_cmd(self):
+        return self.exec_cmd(self.input_exec_type(), self.input_exec_name())
 
-    def output_exec(self):
-        return self.exec(self.option.output_exec_type, self.output_exec_name())
+    def output_exec_cmd(self):
+        return self.exec_cmd(self.output_exec_type(), self.output_exec_name())
 
 
 class tool:
@@ -339,16 +307,6 @@ class tool:
             return string
 
     @staticmethod
-    def check_empty(check_list):
-        have_err = False
-        for file_name in check_list:
-            if os.path.getsize(file_name) == 0:
-                print(tool.colorful(file_name + " is empty", "purple"))
-                have_err = True
-        if have_err:
-            input(tool.colorful("-----存在空文件---按回车继续-----", "yellow"))
-
-    @staticmethod
     def readable_byte(value):
         unit = ["B", "KB", "MB", "GB"]
         level = 0
@@ -358,7 +316,7 @@ class tool:
         return "%.2f %s" % (value, unit[level])
 
     @staticmethod
-    def download_version(arg, version):
+    def download_version(url, new_version, ignore_version):
         def download(url):
             requests.adapters.DEFAULT_RETRIES = 5  # 增加重连次数
             ses = requests.session()
@@ -372,34 +330,34 @@ class tool:
         print("Warning: It will change your default config in the script.")
         print("You can use \"-config_dump\" to dump your default json.")
         input(tool.colorful("-----press enter to continue-----", "red"))
-        print("Current version :", arg.version)
-        print("Upgrade to :", version)
+        print("Current version :", version)
+        print("Upgrade to :", new_version)
         if version == "latest":
-            api_url = arg.json_data["github_url"] + "/latest"
+            url += "/latest"
         else:
-            api_url = arg.json_data["github_url"] + "/tags/" + version
-        print("Get", version, "version description from :\n" + "   ", api_url)
-        version_json = download(api_url).json()
-        # api_url 获取错误
+            url += "/tags/" + new_version
+        print("Get", new_version, "version description from :\n" + "   ", url)
+        version_json = download(url).json()
+        # url 获取错误
         if "message" in version_json:
             print("Api message:", version_json["message"])
             print("Check the url or the version name")
             return
         # 需要更新至最新版 但已经是最新版
-        if version == "latest" and version_json["tag_name"] == arg.version:
+        if new_version == "latest" and version_json["tag_name"] == version:
             print("Already the latest version")
-            print("Use \"-get %s\" to compulsory upgrade" % arg.version)
+            print("Use \"-get %s\" to compulsory upgrade" % version)
             return
         # ignore version
-        if version == "latest" and version_json["tag_name"] in arg.json_data[
-                "ignore_version"]:
+        if new_version == "latest" and version_json[
+                "tag_name"] in ignore_version:
             print("Latest version is %s. Ignored" % version_json["tag_name"])
             return
         print("Successfully get version json, download file")
         for asset in version_json["assets"]:
             file_name = asset["name"]
             if file_name == "data_maker.py":
-                file_name = arg.script_name
+                file_name = sys.argv[0].split('/')[-1]
             else:
                 while os.path.isfile(file_name):
                     file_name = "new_" + file_name
@@ -409,65 +367,122 @@ class tool:
             with open(file_name, "wb") as fl:
                 fl.write(res.content)
         print("Successfully get the version:", version_json["tag_name"])
-        print("Use \"-get %s\" to back to old version" % arg.version)
+        print("Use \"-get %s\" to back to old version" % version)
         print("Version", version_json["tag_name"],
               "description:\n" + version_json["body"])
 
 
-class Progress_Bar:
-    def __init__(self, output_str, print_cnt=True, start_cnt=0):
-        self.output_str = output_str
-        self.print_cnt = print_cnt
-        self.cnt = start_cnt
-        self.begin()
+class file_oper:
+    @staticmethod
+    def popen(cmd, input_type, input_str, output_type, output_str):
+        if input_type == "file":
+            file_input = open(input_str, 'r')
+        elif input_type == "str":
+            file_input = subprocess.PIPE
+        if output_type == "file":
+            file_output = open(output_str, 'w')
+        elif output_type == "str":
+            file_output = subprocess.PIPE
+        popen = subprocess.Popen(cmd.split(),
+                                 stdin=file_input,
+                                 stdout=file_output,
+                                 universal_newlines=True)
+        if input_type == "str":
+            popen.stdin.write(input_str)
+            popen.stdin.close()
+        popen.wait()
+        if input_type == "file":
+            file_input.close()
+        if output_type == "file":
+            file_output.close()
 
-    def begin(self):
-        self.thread = threading.Thread(target=self.print_loop)
-        self.thread.start()
+    @staticmethod
+    def file_head(file_name):
+        with open(file_name, 'r') as fp:
+            file_content = fp.readline()
+            if len(file_content) > 50:
+                return file_content[:50] + "..."
+            if len(file_content) > 0 and file_content[-1] == '\n':
+                return file_content[:-1]
 
-    def print_loop(self):
-        i = 0
-        char = ['\\', '|', '/', '—']
-        time.sleep(0.1)
-        if self.print_cnt:
-            while self.cnt != -1:
-                print("%s:%3d %c\r" % (self.output_str, self.cnt, char[i % 4]),
-                      end='')
-                i += 1
+    @staticmethod
+    def check_empty(check_list):
+        have_err = False
+        for file_name in check_list:
+            if os.path.getsize(file_name) == 0:
+                print(tool.colorful(file_name + " is empty", "purple"))
+                have_err = True
+        if have_err:
+            input(tool.colorful("-----存在空文件---按回车继续-----", "yellow"))
+
+    @staticmethod
+    def exec_thread_pool(thread_pool, multi_thread=False):
+        def thread_pool_watcher():
+            char = ['\\', '|', '/', '—']
+            cnt = 0
+            i = 0
+            while cnt != len(thread_pool):
                 time.sleep(0.1)
-        else:
-            while self.cnt != -1:
-                print("%s:  %c\r" % (self.output_str, char[i % 4]), end='')
+                cnt = 0
                 i += 1
-                time.sleep(0.1)
+                for thread in thread_pool:
+                    if thread.isAlive():
+                        print("✗", end="")
+                    else:
+                        print("✓", end="")
+                        cnt += 1
+                print(" %2d/%2d  %c\r" % (cnt, len(thread_pool), char[i % 4]),
+                      end="")
+            print("✓" * len(thread_pool), "%2d/%2d" % (cnt, len(thread_pool)),
+                  "done")
 
-    def increase(self):
-        self.cnt += 1
+        watcher = threading.Thread(target=thread_pool_watcher)
+        watcher.start()
+        for thread in thread_pool:
+            thread.start()
+            if not multi_thread:
+                thread.join()
+        watcher.join()
 
-    def end(self):
-        self.cnt = -1
-        self.thread.join()
 
+class workflow(explainer):
+    garbage = list()
+    state = list()
 
-class workflow(config):
-    def __init__(self):
-        config.__init__(self)
+    def __init__(self,
+                 json_name="config.json",
+                 args_str=None,
+                 multi_thread=False):
+        explainer.__init__(self, json_name, args_str)
+        self.multi_thread = multi_thread
 
     def work(self):
-        self.make_temp_dir()
         self.pre_compile()
-        self.make_input_data()
-        self.make_output_data()
-        self.zipped()
+        if "in" not in self.option.skip:
+            self.make_temp_dir()
+            self.get_state(self.json_data["state_name"])
+            self.make_input_data()
+        if "out" not in self.option.skip:
+            self.make_output_data()
+        if "zip" not in self.option.skip:
+            self.zipped(self.zip_list, self.zip_name)
         self.clean()
         print(tool.colorful("-----完成-----", "red"))
 
     def make_temp_dir(self):
-        if "in" in self.option.skip:
-            return
         if os.path.isdir("temp"):
             shutil.rmtree("temp")
         os.mkdir("temp")
+
+    def get_state(self, state_name):
+        try:
+            with open(state_name, mode='r') as state_file:
+                self.state = state_file.read().split('\n')
+            while "" in self.state:
+                self.state.remove("")
+        except FileNotFoundError:
+            print("\"%s\" not found" % self.json_data["state_name"])
+            exit()
 
     def pre_compile(self):
         def cpp_compile(file_name):
@@ -485,105 +500,75 @@ class workflow(config):
                 exit()
             self.garbage.append(file_head + ".out")
 
-        if self.option.input_exec_type == "cpp":
+        if "in" not in self.option.skip and self.input_exec_type() == "cpp":
             cpp_compile(self.input_exec_name())
-        if self.option.output_exec_type == "cpp":
+        if "out" not in self.option.skip and self.output_exec_type() == "cpp":
             cpp_compile(self.output_exec_name())
 
     def make_input_data(self):
-        if "in" in self.option.skip:
-            return
         #构造数据
         if not os.path.isfile(self.input_exec_name()):
             print("\"%s\" not found" % self.input_exec_name())
             exit()
-        bar = Progress_Bar("数据生成中")
-        for i in range(len(self.states)):
-            bar.increase()
-            file_output = open(os.path.join("temp", self.input_file(i + 1)),
-                               'w')
-            popen = subprocess.Popen(self.input_exec().split(),
-                                     stdin=subprocess.PIPE,
-                                     stdout=file_output,
-                                     universal_newlines=True)
-            popen.stdin.write(self.states[i])
-            popen.stdin.close()
-            popen.wait()
-            file_output.close()
-        bar.end()
-        print(f"数据生成完成: {len(self.states)}")
+        print("数据生成中:")
+        file_oper.exec_thread_pool(thread_pool=[
+            threading.Thread(target=file_oper.popen,
+                             args=(self.input_exec_cmd(), "str", self.state[i],
+                                   "file",
+                                   os.path.join("temp",
+                                                self.input_name(i + 1))))
+            for i in range(len(self.state))
+        ],
+                                   multi_thread=self.multi_thread)
         #编辑input
         if self.option.input_edit_num >= 0:
             for i in range(self.option.input_edit_num, 0, -1):
-                os.system(f"code temp/{self.input_file(i)}")
+                os.system(f"code temp/{self.input_name(i)}")
             input("-----等待更改完成---按回车继续-----")
-        tool.check_empty([
-            os.path.join("temp", self.input_file(i + 1))
-            for i in range(len(self.states))
+        file_oper.check_empty([
+            os.path.join("temp", self.input_name(i + 1))
+            for i in range(len(self.state))
         ])
 
     def make_output_data(self):
-        if "out" in self.option.skip:
-            return
         if not os.path.isfile(self.output_exec_name()):
             print("\"%s\" not found" % self.output_exec_name())
             exit()
-        bar = Progress_Bar("结果生成中")
-        for i in range(len(self.states)):
-            bar.increase()
-            file_input = open(os.path.join("temp", self.input_file(i + 1)),
-                              'r')
-            file_output = open(os.path.join("temp", self.output_file(i + 1)),
-                               'w')
-            popen = subprocess.Popen(self.output_exec().split(),
-                                     stdin=file_input,
-                                     stdout=file_output,
-                                     universal_newlines=True)
-            popen.wait()
-            file_input.close()
-            file_output.close()
-        bar.end()
-        print(f"结果生成完成: {len(self.states)}")
+        print("结果生成中:")
+        file_oper.exec_thread_pool(thread_pool=[
+            threading.Thread(target=file_oper.popen,
+                             args=(self.output_exec_cmd(), "file",
+                                   os.path.join("temp",
+                                                self.input_name(i + 1)),
+                                   "file",
+                                   os.path.join("temp",
+                                                self.output_name(i + 1))))
+            for i in range(len(self.state))
+        ],
+                                   multi_thread=self.multi_thread)
         #check empty
-        tool.check_empty([
-            os.path.join("temp", self.output_file(i + 1))
-            for i in range(len(self.states))
+        file_oper.check_empty([
+            os.path.join("temp", self.output_name(i + 1))
+            for i in range(len(self.state))
         ])
         #print output
         if self.option.output_print:
-            for i in range(1, len(self.states) + 1):
-                with open(os.path.join("temp", self.output_file(i)),
-                          'r') as fp:
-                    file_content = fp.readline()
-                if len(file_content) > 50:
-                    file_content = file_content[:50] + "..."
-                if len(file_content) > 0 and file_content[-1] == '\n':
-                    file_content = file_content[:-1]
-                print("%2d: %s" % (i, file_content))
+            for i in range(1, len(self.state) + 1):
+                print("%2d: %s" %
+                      (i,
+                       file_oper.file_head(
+                           os.path.join("temp", self.output_name(i)))))
             input("-----显示结果完成---按回车继续-----")
 
-    def zipped(self):
-        if "zip" in self.option.skip:
-            print(self.json_data["zip_cmd"].format(zip_name=self.option.name))
-            return
-        if "in_exec" in self.option.zip_file:
-            shutil.copyfile(self.input_exec_name(),
-                            os.path.join("temp", self.input_exec_name()))
-        if "out_exec" in self.option.zip_file:
-            shutil.copyfile(self.output_exec_name(),
-                            os.path.join("temp", self.output_exec_name()))
-        if "states" in self.option.zip_file:
-            shutil.copyfile(
-                self.json_data["states_name"],
-                os.path.join("temp", self.json_data["states_name"]))
-        zip_name = self.option.name
+    def zipped(self, zip_list, zip_name):
+        for file_name in zip_list:
+            shutil.copyfile(file_name, os.path.join("temp", file_name))
         if os.path.isfile(zip_name + ".zip"):
             if not tool.yesorno("是否覆盖已有Zip?(%s)" % zip_name):
                 while os.path.isfile(zip_name + ".zip"):
                     zip_name = "new_" + zip_name
-        bar = Progress_Bar("打包数据中", print_cnt=False)
-        os.system(self.json_data["zip_cmd"].format(zip_name=zip_name))
-        bar.end()
+        print("打包数据中\r", end="")
+        shutil.make_archive(base_name=zip_name, format="zip", root_dir="temp")
         zip_size = tool.readable_byte(os.path.getsize(zip_name + ".zip"))
         print(f"打包数据完成:  {zip_name}.zip  {zip_size}" + "\33[K")
 
@@ -596,7 +581,7 @@ class workflow(config):
 
 if __name__ == "__main__":
     try:
-        work = workflow()
+        work = workflow(json_name="config.json", multi_thread=True)
         work.work()
     except KeyboardInterrupt:
         try:
