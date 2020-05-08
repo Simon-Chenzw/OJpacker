@@ -166,6 +166,11 @@ class argument:
             help="STAGE={in,out,zip} skip the stage.",
             metavar="STAGE",
             dest="skip")
+        #多线程
+        work_option_group.add_argument("-multi",
+                                       action='store_true',
+                                       help="multi thread",
+                                       dest="multi_thread")
         # 脚本本体相关
         script_option_group = parser.add_argument_group('script option')
         # version
@@ -418,30 +423,27 @@ class file_oper:
     @staticmethod
     def exec_thread_pool(thread_pool, multi_thread=False):
         def thread_pool_watcher():
-            char = ['\\', '|', '/', '—']
             cnt = 0
-            i = 0
             while cnt != len(thread_pool):
                 time.sleep(0.1)
                 cnt = 0
-                i += 1
-                for thread in thread_pool:
-                    if thread.isAlive():
+                for i in range(len(thread_pool)):
+                    if not thread_pool_started[i] or thread_pool[i].is_alive():
                         print("✗", end="")
                     else:
                         print("✓", end="")
                         cnt += 1
-                print(" %2d/%2d  %c\r" % (cnt, len(thread_pool), char[i % 4]),
-                      end="")
-            print("✓" * len(thread_pool), "%2d/%2d" % (cnt, len(thread_pool)),
-                  "done")
+                print(" %2d/%2d\r" % (cnt, len(thread_pool)), end="")
+            print()
 
+        thread_pool_started = [False] * len(thread_pool)
         watcher = threading.Thread(target=thread_pool_watcher)
         watcher.start()
-        for thread in thread_pool:
-            thread.start()
+        for i in range(len(thread_pool)):
+            thread_pool_started[i] = True
+            thread_pool[i].start()
             if not multi_thread:
-                thread.join()
+                thread_pool[i].join()
         watcher.join()
 
 
@@ -449,12 +451,8 @@ class workflow(explainer):
     garbage = list()
     state = list()
 
-    def __init__(self,
-                 json_name="config.json",
-                 args_str=None,
-                 multi_thread=False):
+    def __init__(self, json_name="config.json", args_str=None):
         explainer.__init__(self, json_name, args_str)
-        self.multi_thread = multi_thread
 
     def work(self):
         self.pre_compile()
@@ -465,7 +463,7 @@ class workflow(explainer):
         if "out" not in self.option.skip:
             self.make_output_data()
         if "zip" not in self.option.skip:
-            self.zipped(self.zip_list, self.zip_name)
+            self.zipped(self.zip_list, self.zip_name())
         self.clean()
         print(tool.colorful("-----完成-----", "red"))
 
@@ -519,7 +517,7 @@ class workflow(explainer):
                                                 self.input_name(i + 1))))
             for i in range(len(self.state))
         ],
-                                   multi_thread=self.multi_thread)
+                                   multi_thread=self.option.multi_thread)
         #编辑input
         if self.option.input_edit_num >= 0:
             for i in range(self.option.input_edit_num, 0, -1):
@@ -545,7 +543,7 @@ class workflow(explainer):
                                                 self.output_name(i + 1))))
             for i in range(len(self.state))
         ],
-                                   multi_thread=self.multi_thread)
+                                   multi_thread=self.option.multi_thread)
         #check empty
         file_oper.check_empty([
             os.path.join("temp", self.output_name(i + 1))
@@ -581,7 +579,7 @@ class workflow(explainer):
 
 if __name__ == "__main__":
     try:
-        work = workflow(json_name="config.json", multi_thread=True)
+        work = workflow(json_name="config.json")
         work.work()
     except KeyboardInterrupt:
         try:
