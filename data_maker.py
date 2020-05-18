@@ -409,6 +409,7 @@ class file_oper:
                 return file_content[:50] + "..."
             if len(file_content) > 0 and file_content[-1] == '\n':
                 return file_content[:-1]
+            return file_content
 
     @staticmethod
     def check_empty(check_list):
