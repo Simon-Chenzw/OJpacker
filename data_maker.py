@@ -465,7 +465,7 @@ class workflow(explainer):
             self.make_output_data()
         if "zip" not in self.option.skip:
             self.zipped(self.zip_list, self.zip_name())
-        self.clean()
+            self.clean()
         print(tool.colorful("-----完成-----", "red"))
 
     def make_temp_dir(self):
