@@ -3,7 +3,7 @@
     "default_zip_name": "problem_data",
     "default_input_exec_type": "py",
     "default_output_exec_type": "cpp",
-    "states_name": "states",
+    "state_name": "state",
     "input_file_name": "data%d.in",
     "output_file_name": "data%d.out",
     "input_exec_name_list": {

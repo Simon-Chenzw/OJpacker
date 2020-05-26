@@ -1,6 +1,10 @@
+# 正在重写中
++ **以下内容为之前的指南，之前的版本可在release中下载**
++ **预计重写成py的一个库，并提供更分明的分层**
+
 # 简介
 一个简单的跨平台脚本，只需准备好所需程序，便可自动执行，自动打包。  
-Script for generating packed test data for Olympic informatics
+Script for packer test data for Olympic informatics Online Judge
 
 ## Instruction
 See demo (version: v1.2.0) for details
@@ -43,7 +47,7 @@ See demo (version: v1.2.0) for details
     + output_exec_name_list: 构造输出数据 各种语言的文件名
     + compile_cmd: 各种语言的编译命令
     + exec_cmd: 各种语言的运行命令
-    + zip_cmd: 压缩命令
+    + ~~zip_cmd: 压缩命令~~ **已经不需要了**
     + github_url: 获取脚本更新的api
 + 默认配置:
     ```json
