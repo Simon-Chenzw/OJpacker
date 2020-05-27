@@ -28,6 +28,18 @@ def popen(cmd, input_type, input_str, output_type, output_str):
         file_output.close()
 
 
+def popen_exec(cmd):
+    """
+    no input, and return popen.stdout.read() + popen.stderr.read()
+    """
+    popen = subprocess.Popen(cmd.split(),
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             universal_newlines=True)
+    popen.wait()
+    return popen.stdout.read() + popen.stderr.read()
+
+
 def file_head(file_name):
     with open(file_name, 'r') as fp:
         file_content = fp.readline()
@@ -51,14 +63,14 @@ def check_empty(check_list):
 def compile(execfile, garbage):
     def global_compile(execfile):
         print(f"编译 {execfile.src}")
-        message = os.popen(execfile.compile()).read()
+        message = popen_exec(execfile.compile())
         print("-----编译信息-----")
         print(message)
         garbage.append(execfile.exe)
 
     def cpp_compile(execfile):
         print(f"编译 {execfile.src}")
-        message = os.popen(execfile.compile()).read()
+        message = popen_exec(execfile.compile())
         # if message.count("error") != 0:
         print("%5d error" % message.count("error"))
         # if message.count("warning") != 0:
@@ -69,8 +81,6 @@ def compile(execfile, garbage):
             exit()
         garbage.append(execfile.exe)
 
-    print(execfile.src, execfile.exe, execfile.compile_cmd,
-          execfile.execute_cmd)
     file_split = os.path.splitext(execfile.src)
     if len(file_split) > 1 and file_split[1] == ".cpp":
         cpp_compile(execfile)
