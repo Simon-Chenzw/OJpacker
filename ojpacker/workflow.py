@@ -4,21 +4,23 @@ import os
 import shutil
 import threading
 import time
-from typing import List
+from typing import List, Union
 
 from . import filetype, ui, utiliy
 
 garbage: List[str] = []
 
+execfile_extype = Union[filetype.execfile, None]
+
 
 def work(
         #file
-        zip_name: str = None,
-        state_name: str = None,
-        input_data_name: str = None,
-        output_data_name: str = None,
-        input_exec: filetype.execfile = None,
-        output_exec: filetype.execfile = None,
+        zip_name: str = "",
+        state_name: str = "",
+        input_data_name: str = "",
+        output_data_name: str = "",
+        input_exec: execfile_extype = None,
+        output_exec: execfile_extype = None,
         input_dir: str = "temp",
         #setting
         show_input: bool = False,
@@ -80,7 +82,7 @@ def mkdir_temp() -> None:
     os.mkdir("temp")
 
 
-def compile(file: filetype.execfile) -> None:
+def compile(file: execfile_extype) -> None:
 
     if file.compile_cmd == None:
         ui.info(f"{file.src} don't have compile command")
@@ -110,7 +112,7 @@ def compile(file: filetype.execfile) -> None:
 def make_input(
         state_name: str,
         input_data_name: str,
-        input_exec: filetype.execfile,
+        input_exec: execfile_extype,
         show: bool = False,
         multi_thread: bool = False,
 ) -> None:
@@ -156,7 +158,7 @@ def make_output(
         input_dir: str,
         input_data_name: str,
         output_data_name: str,
-        output_exec: filetype.execfile,
+        output_exec: execfile_extype,
         show: bool,
         multi_thread: bool,
 ) -> None:
@@ -201,7 +203,7 @@ def zipped(
         zip_name: str,
         zip_list: List[str],
 ) -> None:
-    def readable_byte(value: int) -> str:
+    def readable_byte(value: float) -> str:
         unit = ["B", "KB", "MB", "GB"]
         level = 0
         while (value >= 1024):

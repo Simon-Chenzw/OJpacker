@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from enum import Flag
 
 import os
 import subprocess
@@ -92,6 +93,7 @@ def exec_thread_pool(thread_pool: List[threading.Thread],
                 progress.add_task(f"No.{i+1}", start=False)
                 for i in range(len(thread_pool))
             ]
+            completed = [False for i in range(len(thread_pool))]
             for i in range(len(thread_pool)):
                 thread_pool[i].start()
             end_cnt = 0
@@ -101,11 +103,11 @@ def exec_thread_pool(thread_pool: List[threading.Thread],
                 for i in range(len(thread_pool)):
                     if not thread_pool[i].is_alive():
                         end_cnt += 1
-                        if masks[i] is not None:
+                        if not completed[i]:
                             progress.start_task(masks[i])
                             progress.update(
                                 masks[i],
                                 completed=100,
                                 refresh=True,
                             )
-                            masks[i] = None
+                            completed[i] = True

@@ -53,7 +53,7 @@ def set_log_level(level: Union[int, str] = 20, ) -> None:
         if level in level_table:
             level = level_table[level]
 
-    NONE = lambda *args, **kwargs: None
+    NONE = partial(lambda *args, **kwargs: None)
 
     global error, warning, info, debug
     error = partial(console.log,

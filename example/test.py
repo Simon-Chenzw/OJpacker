@@ -9,7 +9,7 @@ output_exec = ojpacker.execfile("make_out.cpp",
                                 compile_cmd="g++ {src} -o {exe}",
                                 execute_cmd="./{exe}")
 
-ojpacker.ui.set_log_level("info")
+ojpacker.set_log_level("info")
 
 ojpacker.work(
     zip_name="problem_data",
