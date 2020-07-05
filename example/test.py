@@ -3,17 +3,26 @@ import sys
 sys.path.append("../")
 import ojpacker
 
-work = ojpacker.packer(zip_name="problem_data")
-state = ojpacker.statefile("state")
-input_file = ojpacker.datafile("data{num}.in")
-output_file = ojpacker.datafile("data{num}.out")
-input_exec = ojpacker.py3file("make_in.py")
-output_exec = ojpacker.cppfile("make_out.cpp")
-work.load_file(state, input_file, output_file, input_exec, output_exec)
-work.load_setting(showoutput=True,
-                  zip_list=[output_exec.src],
-                  multi_thread=True)
-work.work()
+input_exec = ojpacker.execfile("make_in.py", execute_cmd="python3 {src}")
+output_exec = ojpacker.execfile("make_out.cpp",
+                                "make_out.exe",
+                                compile_cmd="g++ {src} -o {exe}",
+                                execute_cmd="./{exe}")
+
+ojpacker.ui.set_log_level("info")
+
+ojpacker.work(
+    zip_name="problem_data",
+    state_name="state",
+    input_data_name="data{num}.in",
+    output_data_name="data{num}.out",
+    input_exec=input_exec,
+    output_exec=output_exec,
+    show_input=True,
+    show_output=True,
+    zip_list=["state", "make_in.py"],
+    multi_thread=True,
+)
 
 #clean garbage
 os.remove("problem_data.zip")
