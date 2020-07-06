@@ -1,8 +1,10 @@
 from __future__ import absolute_import
 
 import argparse
+import os
+from typing import Optional, Sequence, Text
 from ojpacker.config import input_exec
-from . import config, workflow, filetype
+from . import config, workflow, filetype, demo
 """
 subcommand:
     run
@@ -19,7 +21,7 @@ def get_parser() -> argparse.ArgumentParser:
     )
     # main command
     # run
-    parser.set_defaults(func=run_cmd)
+    parser.set_defaults(func=run_call)
     parser.add_argument(  # name of the zip
         "name",
         nargs='?',
@@ -90,16 +92,20 @@ def get_parser() -> argparse.ArgumentParser:
         version='%(prog)s v0.1.0',
     )
 
-    # # sub command
-    # sub = parser.add_subparsers(dest="subcmd")
+    # sub command
+    sub = parser.add_subparsers(dest="subcmd")
     # # config
     # config = sub.add_parser("config", help="config")
-    # config.set_defaults(func=config_cmd)
+    # config.set_defaults(func=config_call)
+
+    # demo
+    demo = sub.add_parser("demo", help="demo")
+    demo.set_defaults(func=demo_call)
 
     return parser
 
 
-def analyze() -> None:
+def analyze(argv: Optional[Sequence[Text]]) -> None:
     parser = get_parser()
     ans = parser.parse_args()
     ans.func(ans)
@@ -109,7 +115,7 @@ from . import ui
 
 
 # call workflow
-def run_cmd(args: argparse.Namespace) -> None:
+def run_call(args: argparse.Namespace) -> None:
     ui.debug(args)
     ui.set_log_level(args.log_level)
     config.load_setting()
@@ -132,5 +138,12 @@ def run_cmd(args: argparse.Namespace) -> None:
 
 
 # call config
-def config_cmd(args: argparse.Namespace) -> None:
+def config_call(args: argparse.Namespace) -> None:
     pass
+
+
+# call demo
+def demo_call(args: argparse.Namespace) -> None:
+    ui.info(f"make 'ojpacker-demo' at {os.getcwd()}")
+    demo.make_demo()
+    ui.info("run 'cd ojpacker-demo && ojpacker' have a try")

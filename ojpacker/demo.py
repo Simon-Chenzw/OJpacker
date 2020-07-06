@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
-setting = """
+import os
+
+setting = """\
 {
     "defalut_zip_name": "problem_data",
     "state_name": "state",
@@ -35,7 +37,7 @@ setting = """
 }
 """
 
-make_in = """
+make_in = """\
 import random
 import time
 
@@ -44,7 +46,7 @@ n = int(input())
 print(random.randint(1, n), random.randint(1, n))
 """
 
-make_out = """
+make_out = """\
 #include <iostream>
 using namespace std;
 int main() {
@@ -54,7 +56,7 @@ int main() {
 }
 """
 
-state = """
+state = """\
 10
 10
 10
@@ -67,14 +69,16 @@ state = """
 100
 """
 
-
-def write(file: str, content: str) -> None:
-    with open(file, "w") as fp:
-        fp.write(content)
+content_map = {
+    "ojpacker.json": setting,
+    "state": state,
+    "make_in.py": make_in,
+    "make_out.cpp": make_out,
+}
 
 
 def make_demo() -> None:
-    write("ojpacker.json", setting)
-    write("state", state)
-    write("make_in.py", make_in)
-    write("make_out.cpp", make_out)
+    os.mkdir("ojpacker-demo")
+    for file in content_map:
+        with open(os.path.join("ojpacker-demo", file), "w") as fp:
+            fp.write(content_map[file])
