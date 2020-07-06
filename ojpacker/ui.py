@@ -41,6 +41,7 @@ unknown_progress = partial(
 
 
 def set_log_level(level: Union[int, str] = 20, ) -> None:
+    global error, warning, info, debug
 
     if isinstance(level, str):
         level = level.lower()
@@ -52,10 +53,12 @@ def set_log_level(level: Union[int, str] = 20, ) -> None:
         }
         if level in level_table:
             level = level_table[level]
+        else:
+            warning("unknown log level, use info")
+            level = level_table["info"]
 
     NONE = partial(lambda *args, **kwargs: None)
 
-    global error, warning, info, debug
     error = partial(console.log,
                     "[red]ERROR[/red]  :") if level <= 40 else NONE
     warning = partial(console.log,

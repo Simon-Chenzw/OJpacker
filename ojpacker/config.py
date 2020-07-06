@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 
 import json
+from ojpacker import filetype
 import os
 import platform
 
-from typing import Dict
+from typing import Dict, Union
 from . import ui
 
 # config
@@ -46,8 +47,10 @@ def user_setting() -> str:
 def load_setting() -> None:
     if os.path.isfile(json_name):
         setting_json = json_name
+        ui.info("use local config")
     elif os.path.isfile(user_setting()):
         setting_json = user_setting()
+        ui.info("use user config")
     else:
         ui.error("ojpacker.json not found")
         return
@@ -64,3 +67,17 @@ def load_setting() -> None:
             globals()[name] = setting.get(name)
     else:
         ui.error("wrong json format")
+
+
+def get_input_exec(name: str) -> Union[filetype.execfile, None]:
+    if name in input_exec:
+        return filetype.get_execfile(input_exec[name])
+    else:
+        return None
+
+
+def get_output_exec(name: str) -> Union[filetype.execfile, None]:
+    if name in output_exec:
+        return filetype.get_execfile(output_exec[name])
+    else:
+        return None

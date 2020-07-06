@@ -10,8 +10,6 @@ from . import filetype, ui, utiliy
 
 garbage: List[str] = []
 
-execfile_extype = Union[filetype.execfile, None]
-
 
 def work(
         #file
@@ -19,14 +17,14 @@ def work(
         state_name: str = "",
         input_data_name: str = "",
         output_data_name: str = "",
-        input_exec: execfile_extype = None,
-        output_exec: execfile_extype = None,
+        input_exec: Union[filetype.execfile, None] = None,
+        output_exec: Union[filetype.execfile, None] = None,
         input_dir: str = "temp",
         #setting
         show_input: bool = False,
         show_output: bool = False,
+        zip: bool = False,
         zip_list: List[str] = [],
-        executive_part: List[str] = ["in", "out", "zip"],
         multi_thread: bool = False,
 ) -> None:
     """
@@ -36,13 +34,13 @@ def work(
     mkdir_temp()
 
     # compile
-    if "in" in executive_part:
+    if input_exec is not None:
         compile(input_exec)
-    if "out" in executive_part:
+    if output_exec is not None:
         compile(output_exec)
 
     # input part
-    if "in" in executive_part:
+    if input_exec is not None:
         make_input(
             state_name,
             input_data_name,
@@ -52,7 +50,7 @@ def work(
         )
 
     # output part
-    if "out" in executive_part:
+    if output_exec is not None:
         make_output(
             input_dir,
             input_data_name,
@@ -64,7 +62,7 @@ def work(
 
     # zip part
     clean(clean_dir=False)
-    if "zip" in executive_part:
+    if zip:
         zipped(zip_name, zip_list)
         clean(clean_dir=True)
 
@@ -82,10 +80,10 @@ def mkdir_temp() -> None:
     os.mkdir("temp")
 
 
-def compile(file: execfile_extype) -> None:
+def compile(file: filetype.execfile) -> None:
 
-    if file.compile_cmd == None:
-        ui.info(f"{file.src} don't have compile command")
+    if not file.compile_cmd:
+        ui.debug(f"{file.src} don't have compile command")
         return
 
     ui.info(f"compile {file.src} to {file.exe}")
@@ -112,7 +110,7 @@ def compile(file: execfile_extype) -> None:
 def make_input(
         state_name: str,
         input_data_name: str,
-        input_exec: execfile_extype,
+        input_exec: filetype.execfile,
         show: bool = False,
         multi_thread: bool = False,
 ) -> None:
@@ -158,7 +156,7 @@ def make_output(
         input_dir: str,
         input_data_name: str,
         output_data_name: str,
-        output_exec: execfile_extype,
+        output_exec: filetype.execfile,
         show: bool,
         multi_thread: bool,
 ) -> None:
