@@ -3,7 +3,8 @@ from __future__ import absolute_import
 from . import ui, arg
 
 
-def main() -> None:
+def main(debug: bool = False) -> None:
+    ui.set_log_level("debug" if debug else "info")
     try:
         arg.analyze()
     except SystemExit:

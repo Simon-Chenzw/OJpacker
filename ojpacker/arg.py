@@ -84,6 +84,11 @@ def get_parser() -> argparse.ArgumentParser:
         help="the log level",
         dest="log_level",
     )
+    parser.add_argument(
+        "-vesion",
+        action='version',
+        version='%(prog)s v0.1.0',
+    )
 
     # # sub command
     # sub = parser.add_subparsers(dest="subcmd")
@@ -105,8 +110,8 @@ from . import ui
 
 # call workflow
 def run_cmd(args: argparse.Namespace) -> None:
-    ui.set_log_level(args.log_level)
     ui.debug(args)
+    ui.set_log_level(args.log_level)
     config.load_setting()
     workflow.work(
         zip_name=args.name or config.defalut_zip_name,
