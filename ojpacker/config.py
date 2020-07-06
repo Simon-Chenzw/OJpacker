@@ -1,12 +1,13 @@
 from __future__ import absolute_import
 
 import json
-from . import filetype
 import os
 import platform
+from typing import Any, Dict, Optional
 
-from typing import Dict, Union
-from . import ui
+from ojpacker.error import OjpackerError
+
+from . import filetype, ui
 
 # config
 defalut_zip_name: str = ""
@@ -41,42 +42,40 @@ def user_setting() -> str:
     if sys == "linux" or sys == "windows":
         return os.path.expanduser(os.path.join("~", ".config", json_name))
     else:
-        return ""
+        return json_name
 
 
 def load_setting() -> None:
     if os.path.isfile(json_name):
         setting_json = json_name
-        ui.info("use local config")
+        ui.debug("use local config")
     elif os.path.isfile(user_setting()):
         setting_json = user_setting()
-        ui.info("use user config")
+        ui.debug("use user config")
     else:
-        ui.error("ojpacker.json not found")
-        return
+        raise OjpackerError("No user or local configuration found")
 
     with open(setting_json, "r") as fp:
         try:
-            setting: dict = json.load(fp)
+            file_setting: Any = json.load(fp)
         except json.JSONDecodeError:
-            ui.error("wrong json format")
-            return
+            raise OjpackerError("wrong json format")
 
-    if isinstance(setting, dict):
+    if isinstance(file_setting, dict):
         for name in config_list:
-            globals()[name] = setting.get(name)
+            globals()[name] = file_setting.get(name)
     else:
-        ui.error("wrong json format")
+        raise OjpackerError("wrong json format")
 
 
-def get_input_exec(name: str) -> Union[filetype.execfile, None]:
+def get_input_exec(name: str) -> Optional[filetype.execfile]:
     if name in input_exec:
         return filetype.get_execfile(input_exec[name])
     else:
         return None
 
 
-def get_output_exec(name: str) -> Union[filetype.execfile, None]:
+def get_output_exec(name: str) -> Optional[filetype.execfile]:
     if name in output_exec:
         return filetype.get_execfile(output_exec[name])
     else:

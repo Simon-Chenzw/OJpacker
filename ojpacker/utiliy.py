@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-from enum import Flag
 
 import os
 import subprocess
@@ -20,7 +19,6 @@ def popen_s2f(cmd: str, input_str: str, output_name: str) -> None:
                                  stdin=subprocess.PIPE,
                                  stdout=file_out,
                                  universal_newlines=True)
-        ui.debug(f"write '{input_str} to stdin, and close stdin'")
         popen.stdin.write(input_str)
         popen.stdin.close()
         popen.wait()
@@ -58,6 +56,8 @@ def popen_s2s(cmd: str, input_str: str = "") -> str:
 
 def file_head(file_name: str) -> str:
     ui.debug(f"get file head of '{file_name}'")
+    if not os.path.isfile(file_name):
+        return "[red]file not found[/red]"
     with open(file_name, 'r') as fp:
         content = fp.readline()
         if len(content) > 50:
@@ -71,6 +71,9 @@ def check_empty(check_list: List[str]) -> bool:
     ui.debug("check empty:", check_list)
     have_err = False
     for name in check_list:
+        if not os.path.isfile(name):
+            ui.warning(f"after making input, '{name}' not found")
+            continue
         if os.path.getsize(name) == 0:
             ui.warning(f"'{name}' is empty")
             have_err = True

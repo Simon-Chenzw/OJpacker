@@ -1,1 +1,6 @@
 __pycache__/
+temp/
+ojpacker-demo/
+
+/ojpacker.egg-info/
+*.zip

@@ -1,11 +1,12 @@
 from __future__ import absolute_import
 
 import sys
+import time
 from functools import partial
 from typing import Dict, Union
 
 from rich.console import Console
-from rich.progress import BarColumn, Progress
+from rich.progress import BarColumn, Progress, TimeRemainingColumn
 
 #console
 console = Console(
@@ -25,7 +26,7 @@ debug = partial(console.log, "[green]DEBUG[/green]  :")
 # progress
 progress = partial(
     Progress,
-    " " * 10,
+    " " * 15,
     "[progress.description]{task.description:10}",
     BarColumn(),
     "{task.completed} of {task.total}",
@@ -33,11 +34,30 @@ progress = partial(
 )
 unknown_progress = partial(
     Progress,
-    " " * 10,
+    " " * 15,
     "[progress.description]{task.description:10}",
     BarColumn(),
     console=console,
 )
+
+
+def countdown(second: int) -> None:
+    with Progress(
+            " " * 15,
+            "[progress.description]{task.description:10}",
+            TimeRemainingColumn(),
+            console=console,
+            transient=True,
+    ) as progress:
+        mask = progress.add_task(
+            "     [cyan]Countdown[/cyan]",
+            total=second * 20 - 10,
+            start=False,
+        )
+        progress.start_task(mask)
+        for _ in range(second * 20):
+            progress.advance(mask)
+            time.sleep(0.05)
 
 
 def set_log_level(level: Union[int, str] = 20, ) -> None:

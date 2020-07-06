@@ -3,23 +3,34 @@ from __future__ import absolute_import
 import argparse
 import os
 from typing import Optional, Sequence, Text
-from ojpacker.config import input_exec
-from . import config, workflow, filetype, demo
-"""
-subcommand:
-    run
-    config
-    demo
-"""
+
+from . import config, demo, ui, workflow
 
 
 def get_parser() -> argparse.ArgumentParser:
+    # main command
     parser = argparse.ArgumentParser(
         prog='ojpacker',
         usage="ojpacker [name] [-option]",
         description="data packer for Online Judge",
     )
-    # main command
+
+    parser.add_argument(
+        "-log",
+        default="info",
+        type=str,
+        help="the log level",
+        dest="log_level",
+    )
+    parser.add_argument(
+        "-vesion",
+        action='version',
+        version='%(prog)s v0.1.0',
+    )
+
+    # sub command
+    sub = parser.add_subparsers(dest="subcmd")
+
     # run
     parser.set_defaults(func=run_call)
     parser.add_argument(  # name of the zip
@@ -67,7 +78,7 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-addzip",
-        nargs='?',
+        nargs='+',
         default=[],
         help="add file into the zip",
         metavar="FILE",
@@ -79,21 +90,6 @@ def get_parser() -> argparse.ArgumentParser:
         help="multi thread",
         dest="multi_thread",
     )
-    parser.add_argument(
-        "-log",
-        default="info",
-        type=str,
-        help="the log level",
-        dest="log_level",
-    )
-    parser.add_argument(
-        "-vesion",
-        action='version',
-        version='%(prog)s v0.1.0',
-    )
-
-    # sub command
-    sub = parser.add_subparsers(dest="subcmd")
     # # config
     # config = sub.add_parser("config", help="config")
     # config.set_defaults(func=config_call)
@@ -107,17 +103,15 @@ def get_parser() -> argparse.ArgumentParser:
 
 def analyze(argv: Optional[Sequence[Text]]) -> None:
     parser = get_parser()
-    ans = parser.parse_args()
+    ans = parser.parse_args(argv)
+    ui.set_log_level(ans.log_level)
+    ui.debug(argv)
+    ui.debug(ans)
     ans.func(ans)
-
-
-from . import ui
 
 
 # call workflow
 def run_call(args: argparse.Namespace) -> None:
-    ui.debug(args)
-    ui.set_log_level(args.log_level)
     config.load_setting()
     workflow.work(
         zip_name=args.name or config.defalut_zip_name,

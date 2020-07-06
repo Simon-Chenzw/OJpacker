@@ -10,7 +10,7 @@ class execfile:
     you can you macro {src} {exe} in "command" 
     """
     def __init__(self,
-                 src: str,
+                 src: str = "",
                  exe: str = "",
                  compile_cmd: str = "",
                  execute_cmd: str = ""):

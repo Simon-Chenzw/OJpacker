@@ -26,4 +26,7 @@ setup(
     author_email="1020359403@qq.com",
     url="https://github.com/Simon-Chenzw/OJpacker",
     license="LGPLv3",
+    entry_points={
+        'console_scripts': ['ojpacker = ojpacker:main'],
+    },
 )
