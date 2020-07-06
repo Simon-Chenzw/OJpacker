@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import json
-from ojpacker import filetype
+from . import filetype
 import os
 import platform
 

@@ -105,8 +105,8 @@ from . import ui
 
 # call workflow
 def run_cmd(args: argparse.Namespace) -> None:
-    ui.debug(args)
     ui.set_log_level(args.log_level)
+    ui.debug(args)
     config.load_setting()
     workflow.work(
         zip_name=args.name or config.defalut_zip_name,

@@ -6,6 +6,8 @@ from . import ui, arg
 def main() -> None:
     try:
         arg.analyze()
+    except SystemExit:
+        ui.debug("catch SystemExit")
     except KeyboardInterrupt:
         ui.debug("catch KeyboardInterrupt")
     except:

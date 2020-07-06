@@ -26,4 +26,5 @@ import ojpacker
 
 ojpacker.main()
 # clean garbage
-os.remove("problem_data.zip")
+if os.path.isfile("problem_data.zip"):
+    os.remove("problem_data.zip")
