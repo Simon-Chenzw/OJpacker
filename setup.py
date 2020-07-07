@@ -18,7 +18,8 @@ setup(
         # "Operating System :: OS Independent",
     ],
     # description
-    description="data packer for Online Judge",
+    description=
+    "a script can packer test data for Olympic informatics Online Judge",
     long_description=long_description,
     long_description_content_type="text/markdown",
     # about
