@@ -11,15 +11,20 @@ def get_parser() -> argparse.ArgumentParser:
     # main command
     parser = argparse.ArgumentParser(
         prog='ojpacker',
-        usage="ojpacker [name] [-option]",
-        description="data packer for Online Judge",
+        usage=
+        "ojpacker [-option]         packing data\n    or ojpacker [subcommand]      others",
+        description=
+        "a script can packer test data for Olympic informatics Online Judge",
+        epilog=
+        "Tips: if the executable file name does not exist in json, the program will skip that stage",
     )
 
     parser.add_argument(
         "-log",
         default="info",
         type=str,
-        help="the log level",
+        help="set log level, default is info",
+        metavar="LEVEL",
         dest="log_level",
     )
     parser.add_argument(
@@ -29,16 +34,20 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     # sub command
-    sub = parser.add_subparsers(dest="subcmd")
+    sub = parser.add_subparsers(
+        title="subcommand",
+        dest="subcmd",
+        metavar="",
+    )
 
     # run
     parser.set_defaults(func=run_call)
     parser.add_argument(  # name of the zip
-        "name",
-        nargs='?',
+        "-name",
         default="",
-        help="name of the zip",
-        # dest="zip_name",
+        help="name of the zip, without suffix",
+        metavar="FILE",
+        dest="name",
     )
     parser.add_argument(  # print detail
         "-show",
@@ -47,27 +56,31 @@ def get_parser() -> argparse.ArgumentParser:
         default=[],
         choices=["input", "output"],
         help="print the detail of input or output files",
+        metavar="input or output",
         dest="show",
     )
     parser.add_argument(
         "-dir",
         default="temp",
         type=str,
-        help="the input file dir when you don't need make input",
+        help="the input directory when you skip making input",
+        metavar="directory",
         dest="input_dir",
     )
     parser.add_argument(
         "-input",
         default="",
         type=str,
-        help="the language that make input",
+        help="the file that make input, setting in json.",
+        metavar="NAME",
         dest="input_exec_type",
     )
     parser.add_argument(
         "-output",
         default="",
         type=str,
-        help="the language that make output",
+        help="the file that make output, setting in json.",
+        metavar="NAME",
         dest="output_exec_type",
     )
     parser.add_argument(
@@ -80,23 +93,33 @@ def get_parser() -> argparse.ArgumentParser:
         "-addzip",
         nargs='+',
         default=[],
-        help="add file into the zip",
+        help="add files to zip before compression",
         metavar="FILE",
         dest="zip_list",
     )
     parser.add_argument(
-        "-multi",
+        "-multithreading",
         action='store_true',
-        help="multi thread",
+        help="Use multithreading when executing programs",
         dest="multi_thread",
     )
 
     # config
-    config = sub.add_parser("config", help="config")
+    config = sub.add_parser(
+        "config",
+        usage="ojpacker config",
+        description="setting config",
+        help="setting config",
+    )
     config.set_defaults(func=config_call)
 
     # demo
-    demo = sub.add_parser("demo", help="demo")
+    demo = sub.add_parser(
+        "demo",
+        usage="ojpacker demo",
+        description="make demo folder",
+        help="make demo folder",
+    )
     demo.set_defaults(func=demo_call)
 
     return parser
