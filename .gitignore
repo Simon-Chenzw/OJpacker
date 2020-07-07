@@ -3,4 +3,6 @@ temp/
 ojpacker-demo/
 
 /ojpacker.egg-info/
+/build/
+/dist/
 *.zip

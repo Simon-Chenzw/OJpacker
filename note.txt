@@ -1,0 +1,11 @@
+release make:
+python3 setup.py sdist bdist_wheel
+
+upload:
+twine upload dist/*
+
+develop install:
+python3 setup.py develop --user 
+
+develop uninstall:
+python3 setup.py develop --user --uninstall 
