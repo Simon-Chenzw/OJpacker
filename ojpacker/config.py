@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import json
+import shutil
 import os
 import platform
 from typing import Any, Dict, Optional
@@ -45,15 +46,23 @@ def user_setting() -> str:
         return json_name
 
 
-def load_setting() -> None:
-    if os.path.isfile(json_name):
-        setting_json = json_name
-        ui.debug("use local config")
-    elif os.path.isfile(user_setting()):
-        setting_json = user_setting()
-        ui.debug("use user config")
+def load_setting(path: Optional[str] = None) -> None:
+    if path:
+        if not os.path.isfile(path):
+            raise OjpackerError(f"can't find file at {path}")
+        setting_json = path
     else:
-        raise OjpackerError("No user or local configuration found")
+        if os.path.isfile(json_name):
+            setting_json = json_name
+            if os.path.isfile(user_setting()):
+                ui.info("use local config")
+            else:
+                ui.debug("use local config")
+        elif os.path.isfile(user_setting()):
+            setting_json = user_setting()
+            ui.debug("use user config")
+        else:
+            raise OjpackerError("No user or local configuration found")
 
     with open(setting_json, "r") as fp:
         try:
@@ -80,3 +89,20 @@ def get_output_exec(name: str) -> Optional[filetype.execfile]:
         return filetype.get_execfile(output_exec[name])
     else:
         return None
+
+
+def make_config() -> None:
+    ui.info(
+        "now only supports setting local configuration to user configuration")
+    ui.warning("copy start after 5s")
+    ui.countdown(5)
+    if not os.path.isfile(json_name):
+        raise OjpackerError("local configuration not found")
+    if user_setting() == json_name:
+        raise OjpackerError(
+            "unknown platform, don't know where to store user configuration")
+    if os.path.isfile(user_setting()):
+        ui.warning("already have user configuration, replace after 5 seconds")
+        ui.countdown(5)
+    shutil.copyfile(json_name, user_setting())
+    ui.info(f"{json_name} has been copied to {user_setting()}")

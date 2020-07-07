@@ -90,9 +90,10 @@ def get_parser() -> argparse.ArgumentParser:
         help="multi thread",
         dest="multi_thread",
     )
-    # # config
-    # config = sub.add_parser("config", help="config")
-    # config.set_defaults(func=config_call)
+
+    # config
+    config = sub.add_parser("config", help="config")
+    config.set_defaults(func=config_call)
 
     # demo
     demo = sub.add_parser("demo", help="demo")
@@ -133,7 +134,7 @@ def run_call(args: argparse.Namespace) -> None:
 
 # call config
 def config_call(args: argparse.Namespace) -> None:
-    pass
+    config.make_config()
 
 
 # call demo
