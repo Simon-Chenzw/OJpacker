@@ -260,6 +260,7 @@ def make_output(
         for line in detail:
             ui.rprint(line)
         ui.rprint("-----Press enter to continue-----", end="")
+        input()
 
 
 def zipped(
