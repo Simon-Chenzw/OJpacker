@@ -2,9 +2,8 @@ from __future__ import absolute_import
 
 from typing import Optional, Sequence, Text
 
-from ojpacker.error import OjpackerError
-
 from . import arg, ui
+from .error import OjpackerError
 
 
 def main(argv: Optional[Sequence[Text]] = None) -> None:
