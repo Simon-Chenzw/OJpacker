@@ -276,10 +276,10 @@ def zipped(
         return "%.2f %s" % (value, unit[level])
 
     if zip_list:
-        ui.info("copy file in 'zip_list' to temporary directory")
         for file_name in zip_list:
+            ui.info(f"copy {file_name} to temporary directory")
             if not os.path.isfile(file_name):
-                ui.warning(f"in 'zip_list', {file_name} not found")
+                ui.warning(f"{file_name} not found, skip")
                 continue
             shutil.copyfile(file_name, os.path.join("temp", file_name))
     if os.path.isfile(zip_name + ".zip"):
