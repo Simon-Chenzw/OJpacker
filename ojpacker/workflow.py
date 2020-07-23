@@ -123,12 +123,9 @@ def work(
 def mkdir_temp() -> None:
     # mkdir
     if os.path.isdir("temp"):
-        ui.warning(
-            "'temp' already exists, will be [red]deleted[/red] after [blue]10s[/blue]"
-        )
-        ui.countdown(10)
-        ui.debug("remove directory 'temp'")
+        ui.warning("'temp' already exists, will be [red]deleted[/red]")
         shutil.rmtree("temp")
+        ui.debug("remove directory 'temp'")
     ui.debug("create directory 'temp'")
     os.mkdir("temp")
 
