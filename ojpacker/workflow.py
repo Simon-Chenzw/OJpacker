@@ -116,7 +116,8 @@ def work(
         zipped(zip_name, zip_list)
         clean(clean_dir=True)
     else:
-        ui.info("data has been stored in temporary directory")
+        shutil.move("temp", zip_name)
+        ui.info(f"data has been stored in directory '{zip_name}'")
 
 
 def mkdir_temp() -> None:
