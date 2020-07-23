@@ -5,9 +5,8 @@ import shutil
 import threading
 from typing import List, Optional
 
-from ojpacker.error import OjpackerError
-
 from . import filetype, ui, utiliy
+from .error import OjpackerError
 
 garbage: List[str] = []
 

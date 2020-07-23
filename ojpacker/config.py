@@ -1,14 +1,12 @@
 from __future__ import absolute_import
 
 import json
-import shutil
 import os
-import platform
+import shutil
 from typing import Any, Dict, Optional
 
-from ojpacker.error import OjpackerError
-
 from . import filetype, ui
+from .error import OjpackerError
 
 # config
 defalut_zip_name: str = ""
@@ -33,17 +31,7 @@ config_list = [
 
 # file part
 json_name = "ojpacker.json"
-
-
-def user_setting() -> str:
-    """
-    unsupport platform return ""
-    """
-    sys = platform.system().lower()
-    if sys == "linux" or sys == "windows":
-        return os.path.expanduser(os.path.join("~", ".config", json_name))
-    else:
-        return json_name
+user_setting = os.path.expanduser(os.path.join("~", ".config", json_name))
 
 
 def load_setting(path: Optional[str] = None) -> None:
@@ -54,12 +42,12 @@ def load_setting(path: Optional[str] = None) -> None:
     else:
         if os.path.isfile(json_name):
             setting_json = json_name
-            if os.path.isfile(user_setting()):
+            if os.path.isfile(user_setting):
                 ui.info("use local config")
             else:
                 ui.debug("use local config")
-        elif os.path.isfile(user_setting()):
-            setting_json = user_setting()
+        elif os.path.isfile(user_setting):
+            setting_json = user_setting
             ui.debug("use user config")
         else:
             raise OjpackerError("No user or local configuration found")
@@ -91,18 +79,24 @@ def get_output_exec(name: str) -> Optional[filetype.execfile]:
         return None
 
 
-def make_config() -> None:
-    ui.info(
-        "now only supports setting local configuration to user configuration")
-    ui.warning("copy start after 5s")
+def copyto(copyto: str) -> None:
+    if copyto == "user":
+        src = json_name
+        dst = user_setting
+    elif copyto == "local":
+        src = user_setting
+        dst = json_name
+    else:
+        raise OjpackerError(f"Unexpected 'copyto' type: {copyto}")
+    if os.path.abspath(src) == os.path.abspath(dst):
+        raise OjpackerError(f"src is same to dst: {src}")
+
+    ui.info(f"copy {src} to {dst}")
+    if not os.path.isfile(src):
+        raise OjpackerError(f"{src} not found")
+    if os.path.isfile(dst):
+        ui.warning(f"already have {dst}, will be replaced")
+    ui.info("copy start after 5s")
     ui.countdown(5)
-    if not os.path.isfile(json_name):
-        raise OjpackerError("local configuration not found")
-    if user_setting() == json_name:
-        raise OjpackerError(
-            "unknown platform, don't know where to store user configuration")
-    if os.path.isfile(user_setting()):
-        ui.warning("already have user configuration, replace after 5 seconds")
-        ui.countdown(5)
-    shutil.copyfile(json_name, user_setting())
-    ui.info(f"{json_name} has been copied to {user_setting()}")
+    shutil.copyfile(src, dst)
+    ui.info(f"{src} has been copied to {dst}")

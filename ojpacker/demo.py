@@ -2,6 +2,9 @@ from __future__ import absolute_import
 
 import os
 
+from . import config, ui
+from .error import OjpackerError
+
 setting = """\
 {
     "defalut_zip_name": "problem_data",
@@ -70,15 +73,32 @@ state = """\
 """
 
 content_map = {
-    "ojpacker.json": setting,
+    config.json_name: setting,
     "state": state,
     "make_in.py": make_in,
     "make_out.cpp": make_out,
 }
 
 
-def make_demo() -> None:
-    os.mkdir("ojpacker-demo")
+def make_demo(dir: str) -> None:
+    if os.path.isfile(dir):
+        raise OjpackerError(f"there is already a file named {dir}")
+    if not os.path.isdir(dir):
+        ui.debug(f"make dir {dir}")
+        os.mkdir(dir)
+
+    ui.info(f"make demo at {dir}")
+    dir = os.path.abspath(dir)
     for file in content_map:
-        with open(os.path.join("ojpacker-demo", file), "w") as fp:
+        with open(os.path.join(dir, file), "w") as fp:
             fp.write(content_map[file])
+    ui.info(f"you can try to run 'ojpacker' in {dir}")
+
+
+def make_config() -> None:
+    if os.path.isfile(config.json_name):
+        ui.warning(f"already have '{config.json_name}', will be replaced")
+        ui.countdown(5)
+    with open(config.json_name, "w") as fp:
+        fp.write(setting)
+    ui.info(f"'{config.json_name}' created")

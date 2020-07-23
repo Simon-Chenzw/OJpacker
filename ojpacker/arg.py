@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import argparse
-import os
 from typing import Optional, Sequence, Text
 
 from . import config, demo, ui, workflow
@@ -51,7 +50,7 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(  # print detail
         "-show",
-        nargs='?',
+        nargs='?',  # can't use "-show input output"
         const=["input", "output"],
         default=[],
         choices=["input", "output"],
@@ -112,6 +111,18 @@ def get_parser() -> argparse.ArgumentParser:
         help="setting config",
     )
     config.set_defaults(func=config_call)
+    config.add_argument(
+        "-create",
+        action="store_true",
+        help="Use the configuration in the demo to create a configuration file",
+        dest="create_demo_config")
+    config.add_argument(
+        "-copyto",
+        choices=["user", "local"],
+        help="copy config file between user/local",
+        metavar="user/local",
+        dest="config_copyto",
+    )
 
     # demo
     demo = sub.add_parser(
@@ -121,6 +132,13 @@ def get_parser() -> argparse.ArgumentParser:
         help="make demo folder",
     )
     demo.set_defaults(func=demo_call)
+    demo.add_argument("-dir",
+                      nargs='?',
+                      const=".",
+                      default="ojpacker-demo",
+                      help="Select the directory to generate the demo",
+                      metavar="directory",
+                      dest="demo_dir")
 
     return parser
 
@@ -157,11 +175,12 @@ def run_call(args: argparse.Namespace) -> None:
 
 # call config
 def config_call(args: argparse.Namespace) -> None:
-    config.make_config()
+    if args.create_demo_config:
+        demo.make_config()
+    if args.config_copyto is not None:
+        config.copyto(args.config_copyto)
 
 
 # call demo
 def demo_call(args: argparse.Namespace) -> None:
-    ui.info(f"make 'ojpacker-demo' at {os.getcwd()}")
-    demo.make_demo()
-    ui.info("run 'cd ojpacker-demo && ojpacker' have a try")
+    demo.make_demo(args.demo_dir)
