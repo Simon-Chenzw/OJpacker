@@ -18,10 +18,10 @@ console = Console(
 rprint = console.log
 
 # log
-error = partial(console.log, "[red]ERROR[/red]  :")
-warning = partial(console.log, "[yellow]WARNING[/yellow]:")
-info = partial(console.log, "[blue]INFO[/blue]   :")
-debug = partial(console.log, "[green]DEBUG[/green]  :")
+error = partial(console.log, "[red]ERROR[/red]  ")
+warning = partial(console.log, "[yellow]WARNING[/yellow]")
+info = partial(console.log, "[blue]INFO[/blue]   ")
+debug = partial(console.log, "[green]DEBUG[/green]  ")
 
 # progress
 progress = partial(
@@ -79,11 +79,10 @@ def set_log_level(level: Union[int, str] = 20, ) -> None:
 
     NONE = partial(lambda *args, **kwargs: None)
 
-    error = partial(console.log,
-                    "[red]ERROR[/red]  :") if level <= 40 else NONE
+    error = partial(console.log, "[red]ERROR[/red]  ") if level <= 40 else NONE
     warning = partial(console.log,
-                      "[yellow]WARNING[/yellow]:") if level <= 30 else NONE
+                      "[yellow]WARNING[/yellow]") if level <= 30 else NONE
     info = partial(console.log,
-                   "[blue]INFO[/blue]   :") if level <= 20 else NONE
+                   "[blue]INFO[/blue]   ") if level <= 20 else NONE
     debug = partial(console.log,
-                    "[green]DEBUG[/green]  :") if level <= 10 else NONE
+                    "[green]DEBUG[/green]  ") if level <= 10 else NONE
