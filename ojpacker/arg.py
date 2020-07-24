@@ -15,7 +15,7 @@ def get_parser() -> argparse.ArgumentParser:
         description=
         "a script can packer test data for Olympic informatics Online Judge",
         epilog=
-        "Tips: if the executable file name does not exist in json, the program will skip that stage",
+        "For more detailed information and document, please see: https://github.com/Simon-Chenzw/OJpacker",
     )
 
     parser.add_argument(
@@ -70,7 +70,7 @@ def get_parser() -> argparse.ArgumentParser:
         "-input",
         default="",
         type=str,
-        help="the file that make input, setting in json.",
+        help="the file codename that to make input, or 'skip'.",
         metavar="NAME",
         dest="input_exec_type",
     )
@@ -78,7 +78,7 @@ def get_parser() -> argparse.ArgumentParser:
         "-output",
         default="",
         type=str,
-        help="the file that make output, setting in json.",
+        help="the file codename that to make output, or 'skip'.",
         metavar="NAME",
         dest="output_exec_type",
     )
