@@ -93,6 +93,16 @@ def make_demo(dir: str) -> None:
         with open(os.path.join(dir, file), "w") as fp:
             fp.write(content_map[file])
     ui.info(f"you can try to run 'ojpacker' in {dir}")
+    ui.info("Confirm that the [cyan]C++[/cyan] compilation command is 'g++'\n")
+    ui.info(
+        "Confirm that the [cyan]python[/cyan] execution command is 'python3'\n"
+    )
+    ui.info(
+        f"If [red]not[/red], please change the setting in [purple]{config.json_name}[/purple]"
+    )
+    ui.info(
+        "If you want to use other languages, please add relevant settings in json by yourself"
+    )
 
 
 def make_config() -> None:
