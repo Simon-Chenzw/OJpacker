@@ -68,9 +68,6 @@ def work(
         for file in zip_list:
             if not os.path.isfile(file):
                 ui.warning(f"'{file}' in zip_list, does not exist")
-    else:
-        if zip_list:
-            ui.warning("program won't make zip, but zip_list is not empty")
 
     if input_exec is None and input_dir == "temp":
         ui.warning("skip input phase and fetch output phase data from 'temp'")
@@ -112,12 +109,8 @@ def work(
 
     # zip part
     clean(clean_dir=False)
-    if zip:
-        zipped(zip_name, zip_list)
-        clean(clean_dir=True)
-    else:
-        shutil.move("temp", zip_name)
-        ui.info(f"data has been stored in directory '{zip_name}'")
+    zipped(zip, zip_name, zip_list)
+    clean(clean_dir=True)
 
 
 def mkdir_temp() -> None:
@@ -261,6 +254,7 @@ def make_output(
 
 
 def zipped(
+        will_zip: bool,
         zip_name: str,
         zip_list: List[str],
 ) -> None:
@@ -272,6 +266,7 @@ def zipped(
             level += 1
         return "%.2f %s" % (value, unit[level])
 
+    # 复制 zip_list
     if zip_list:
         for file_name in zip_list:
             ui.info(f"copy {file_name} to temporary directory")
@@ -279,15 +274,20 @@ def zipped(
                 ui.warning(f"{file_name} not found, skip")
                 continue
             shutil.copyfile(file_name, os.path.join("temp", file_name))
-    if os.path.isfile(zip_name + ".zip"):
-        ui.warning(f"already have {zip_name}.zip, remove in 10s")
-        ui.countdown(10)
-        ui.info(f"remove old {zip_name}.zip")
-        os.remove(zip_name + ".zip")
-    ui.info("start compression")
-    shutil.make_archive(base_name=zip_name, format="zip", root_dir="temp")
-    zip_size = readable_byte(os.path.getsize(zip_name + ".zip"))
-    ui.info(f"compression complete: '{zip_name}.zip' {zip_size}")
+
+    if will_zip:
+        if os.path.isfile(zip_name + ".zip"):
+            ui.warning(f"already have {zip_name}.zip, remove in 10s")
+            ui.countdown(10)
+            ui.info(f"remove old {zip_name}.zip")
+            os.remove(zip_name + ".zip")
+        ui.info("start compression")
+        shutil.make_archive(base_name=zip_name, format="zip", root_dir="temp")
+        zip_size = readable_byte(os.path.getsize(zip_name + ".zip"))
+        ui.info(f"compression complete: '{zip_name}.zip' {zip_size}")
+    else:
+        shutil.move("temp", zip_name)
+        ui.info(f"data has been stored in directory '{zip_name}'")
 
 
 def clean(clean_dir: bool) -> None:
