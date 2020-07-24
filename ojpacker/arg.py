@@ -28,8 +28,8 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-vesion",
-        action='version',
-        version='%(prog)s v0.1.0',
+        action="version",
+        version="use 'pip show ojpacker' or 'pip3 show ojpacker'",
     )
 
     # sub command
