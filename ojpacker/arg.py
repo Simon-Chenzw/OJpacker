@@ -45,7 +45,7 @@ def get_parser() -> argparse.ArgumentParser:
         "-name",
         default="",
         help="name of the zip, without suffix",
-        metavar="FILE",
+        metavar="FILENAME",
         dest="name",
     )
     parser.add_argument(  # print detail
@@ -106,7 +106,7 @@ def get_parser() -> argparse.ArgumentParser:
     # config
     config = sub.add_parser(
         "config",
-        usage="ojpacker config",
+        usage="ojpacker config [-option]",
         description="setting config",
         help="setting config",
     )
@@ -127,7 +127,7 @@ def get_parser() -> argparse.ArgumentParser:
     # demo
     demo = sub.add_parser(
         "demo",
-        usage="ojpacker demo",
+        usage="ojpacker demo [-option]",
         description="make demo folder",
         help="make demo folder",
     )
