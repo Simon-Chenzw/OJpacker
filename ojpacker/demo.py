@@ -112,3 +112,13 @@ def make_config() -> None:
     with open(config.json_name, "w") as fp:
         fp.write(setting)
     ui.info(f"'{config.json_name}' created")
+    ui.info("Confirm that the [cyan]C++[/cyan] compilation command is 'g++'\n")
+    ui.info(
+        "Confirm that the [cyan]python[/cyan] execution command is 'python3'\n"
+    )
+    ui.info(
+        f"If [red]not[/red], please change the setting in [purple]{config.json_name}[/purple]"
+    )
+    ui.info(
+        "If you want to use other languages, please add relevant settings in json by yourself"
+    )
