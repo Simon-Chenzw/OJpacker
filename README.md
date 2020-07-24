@@ -19,7 +19,7 @@ a script can packer test data for Olympic informatics Online Judge
 3. [配置文件及其内容](#配置文件及其内容)
 
 ## 工作原理
-举个例子，demo里除去配置文件有三个文件：
+举个例子，demo里除去配置有三个文件：
 + state
 + make_in
 + make_out  
@@ -42,10 +42,10 @@ a script can packer test data for Olympic informatics Online Judge
 ### 文件要求：
 1. state:
     * 每行依次代表了构造in数据点时的所需参数
-    * 空行代表这个数据点没有参数，对应的序号也将跳过
+    * 空行代表没有这个数据点，对应的序号也将跳过
 2. make_in 与 make_out:
     * 只需准备源文件， 如有需要会自动编译，但需配置编译命令
-    * 输入输出均使用 标准输入输出
+    * 输入输出均使用标准输入输出
 3. 配置文件
 4. 缓存目录：
     * 运行时需要缓存目录 temp，此目录开始时会自动创建，结束时会自动销毁。
@@ -78,14 +78,14 @@ a script can packer test data for Olympic informatics Online Judge
     当你跳过生成 in文件的阶段时，可以指定一个文件夹，使 make_out 从中读取数据。若未指定，则从 temp 目录读取
 
 * `-input NAME` :
-    指定 make_in 文件，详见配置文件的 `input_exec`
-    * 这里的NAME不是文件名，而是配置中的代号
+    指定 make_in 文件
+    * 这里的NAME不是文件名，而是配置中的代号，详见配置文件的 `input_exec`
     * 若没有这个参数，将会使用配置中的 `input_default_exec`
     * 若 NAME 在配置中不存在，则会跳过此阶段
 
 * `-output NAME` :
-    指定 make_out 文件，详见配置文件的 `output_exec`
-    * 这里的NAME不是文件名，而是配置中的代号
+    指定 make_out 文件
+    * 这里的NAME不是文件名，而是配置中的代号，详见配置文件的 `output_exec`
     * 若没有这个参数，将会使用配置中的 `output_default_exec`
     * 若 NAME 在配置中不存在，则会跳过此阶段
 
@@ -115,10 +115,10 @@ config 是配置文件相关的命令，单独运行无效果
 
 ## 配置文件及其内容
 * 配置文件名为 ojpacker.json
-* 配置文件分为两种，当前目录的称为local，`~/.config` 下的称为user。当local存在时使用local，否则使用user
+* 配置文件分为两种，当前目录的称为local，`~/.config/` 下的称为user。当local存在时使用local，否则使用user
 
 ### json各参数详解
-json内容为一字典，以下是各个键值的意义
+json内容为字典，以下是各个键值的意义
 
 * 字符串：
     * `defalut_zip_name` :
