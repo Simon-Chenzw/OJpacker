@@ -130,18 +130,23 @@ def compile(file: filetype.execfile) -> None:
         return
 
     ui.info(f"compile {file.src} to {file.exe}")
-    message = utiliy.popen_s2s(file.get_compile(exe_dir="temp"), check=False)
+    message = utiliy.popen(
+        file.get_compile(exe_dir="temp"),
+        typ="s2s",
+        check_return=False,
+    ).get_out()
     exe_path = os.path.join("temp", file.exe)
     ui.debug(f"check {exe_path}, {os.path.isfile(exe_path)}")
     if not os.path.isfile(exe_path):
         if message:
             if ui.log_level <= ui.level_table["warning"]:
                 ui.console.print("[yellow]-----compile message-----")
-                utiliy.popen_s2s(
+                utiliy.popen(
                     file.get_compile(exe_dir="temp"),
                     capture_output=False,
-                    check=False,
-                )
+                    typ="s2s",
+                    check_return=False,
+                ).join()
                 ui.console.print("[yellow]-----compile message-----")
         else:
             ui.warning("no compile message")
@@ -177,18 +182,19 @@ def make_input(
     else:
         raise OjpackerError("state file is empty")
     # make input data
-    thread_pool = [
-        threading.Thread(target=utiliy.popen_s2f,
-                         args=(input_exec.get_execute(exe_dir="temp"),
-                               state[i],
-                               os.path.join(
-                                   "temp",
-                                   input_data_name.format(num=i + 1),
-                               ))) for i in range(len(state))
-        if len(state[i].split()) != 0
+    ui.info(f"running {input_exec.exe}")
+    pool = [
+        utiliy.popen(
+            input_exec.get_execute(exe_dir="temp"),
+            typ="s2f",
+            input=state[i],
+            output=os.path.join(
+                "temp",
+                input_data_name.format(num=i + 1),
+            ),
+        ) for i in range(len(state)) if len(state[i].split()) != 0
     ]
-    ui.info(f"running {input_exec.exe}, multithread: {multi_thread}")
-    utiliy.exec_thread_pool(thread_pool, multi_thread)
+    utiliy.execute_pool(pool, multi_thread)
 
     # check empty
     utiliy.check_empty([
@@ -225,25 +231,31 @@ def make_output(
 
     # make output data
     i = 0
-    thread_pool = []
+    pool: List[utiliy.popen] = []
     while os.path.isfile(
             os.path.join(input_dir, input_data_name.format(num=i + 1))):
-        thread_pool.append(
-            threading.Thread(
-                target=utiliy.popen_f2f,
-                args=(output_exec.get_execute(exe_dir="temp"),
-                      os.path.join(input_dir,
-                                   input_data_name.format(num=i + 1)),
-                      os.path.join("temp",
-                                   output_data_name.format(num=i + 1)))))
+        pool.append(
+            utiliy.popen(
+                output_exec.get_execute(exe_dir="temp"),
+                typ="f2f",
+                input=os.path.join(
+                    input_dir,
+                    input_data_name.format(num=i + 1),
+                ),
+                output=os.path.join(
+                    "temp",
+                    output_data_name.format(num=i + 1),
+                ),
+            ))
         i += 1
-    ui.info(f"{len(thread_pool)} inputs file detected")
-    utiliy.exec_thread_pool(thread_pool, multi_thread)
+    ui.info(f"{len(pool)} inputs file detected")
+    ui.info(f"running {output_exec.exe}")
+    utiliy.execute_pool(pool, multi_thread)
 
     #check empty
     utiliy.check_empty([
         os.path.join("temp", output_data_name.format(num=i + 1))
-        for i in range(len(thread_pool))
+        for i in range(len(pool))
     ])
 
     #print output
@@ -255,8 +267,11 @@ def make_output(
                 "{:<10}".format(output_data_name.format(num=i + 1)) +
                 "[/purple]",
                 content=utiliy.file_head(
-                    os.path.join("temp", output_data_name.format(num=i + 1))),
-            ) for i in range(len(thread_pool))
+                    os.path.join(
+                        "temp",
+                        output_data_name.format(num=i + 1),
+                    ), ),
+            ) for i in range(len(pool))
         ]
         for line in detail:
             ui.rprint(line)

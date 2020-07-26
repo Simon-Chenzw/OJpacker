@@ -5,123 +5,139 @@ import shlex
 import subprocess
 import threading
 import time
-from typing import List, Optional
+from typing import List, NoReturn, Optional
+from typing_extensions import Literal
 
 from . import ui
 from .error import OjpackerError
 
 
-def popen_s2f(
-        cmd: str,
-        input_str: Optional[str],
-        output_name: str,
-        check: bool = True,
-        max_time: Optional[int] = None,
-) -> None:
-    """
-    get str input, and set output to file
-    """
-    ui.debug(f"popen_s2f '{cmd}' '{input_str}' '{output_name}'")
-    with open(output_name, 'w') as file_out:
-        try:
-            process = subprocess.run(
-                shlex.split(cmd),
-                timeout=max_time,
-                input=input_str,
-                stdout=file_out,
-                check=check,
+class popen:
+    def __init__(
+            self,
+            cmd: str,
+            typ: Literal["s2s", "s2f", "f2f"] = "s2s",
+            input: Optional[str] = None,
+            output: Optional[str] = None,
+            capture_output: bool = True,
+            check_return: bool = True,
+            max_time: Optional[int] = None,
+    ) -> Optional[str]:
+        self.cmd = cmd
+        self.typ = typ
+        self.input = input
+        self.output = output
+        self.capture_output = capture_output
+        self.check_return = check_return
+        self.max_time = max_time
+        self.is_start = False
+        ui.debug("popen create:", cmd, "in:", input, "out:", output)
+
+    def start(self) -> None:
+        if self.typ == "s2s":
+            self.popen = subprocess.Popen(
+                shlex.split(self.cmd),
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE if self.capture_output else None,
+                stderr=subprocess.STDOUT if self.capture_output else None,
                 universal_newlines=True,
             )
-            ui.debug("popen_s2s done:", process.args)
-        except subprocess.TimeoutExpired as err:
-            raise OjpackerError(
-                "Command '{command}' timed out after {time} seconds".format(
-                    command=" ".join(err.cmd),
-                    time=err.timeout,
-                ))
-        except subprocess.CalledProcessError as err:
-            raise OjpackerError(
-                "Command '{command}' returned non-zero exit status {code}".
-                format(
-                    command=" ".join(err.cmd),
-                    code=err.returncode,
-                ))
-
-
-def popen_f2f(
-        cmd: str,
-        input_name: str,
-        output_name: str,
-        check: bool = True,
-        max_time: Optional[int] = None,
-) -> None:
-    """
-    get input from file, and set output to file
-    """
-    ui.debug(f"popen_f2f '{cmd}' '{input_name}' '{output_name}'")
-    with open(input_name, 'r') as file_in:
-        with open(output_name, 'w') as file_out:
-            try:
-                process = subprocess.run(
-                    shlex.split(cmd),
-                    timeout=max_time,
-                    stdin=file_in,
-                    stdout=file_out,
-                    check=check,
-                    universal_newlines=True,
-                )
-                ui.debug("popen_s2s done:", process.args)
-            except subprocess.TimeoutExpired as err:
-                raise OjpackerError(
-                    "Command '{command}' timed out after {time} seconds".
-                    format(
-                        command=" ".join(err.cmd),
-                        time=err.timeout,
-                    ))
-            except subprocess.CalledProcessError as err:
-                raise OjpackerError(
-                    "Command '{command}' returned non-zero exit status {code}".
-                    format(
-                        command=" ".join(err.cmd),
-                        code=err.returncode,
-                    ))
-
-
-def popen_s2s(
-        cmd: str,
-        input_str: Optional[str] = None,
-        capture_output: bool = True,
-        check: bool = True,
-        max_time: Optional[int] = None,
-) -> str:
-    """
-    get str input, and return stdout & stderr
-    """
-    ui.debug(f"popen_s2s '{cmd}' '{input_str}'")
-    try:
-        process = subprocess.run(
-            shlex.split(cmd),
-            timeout=max_time,
-            input=input_str,
-            stdout=subprocess.PIPE if capture_output else None,
-            stderr=subprocess.STDOUT if capture_output else None,
-            check=check,
-            universal_newlines=True,
+            if self.input:
+                self.popen.stdin.write(self.input)
+            self.popen.stdin.close()
+        elif self.typ == "s2f":
+            if self.output:
+                self.file_out = open(self.output, 'w')
+            else:
+                raise OjpackerError("popen: need input file, but get nothing")
+            self.popen = subprocess.Popen(
+                shlex.split(self.cmd),
+                stdin=subprocess.PIPE,
+                stdout=self.file_out,
+                stderr=None,
+                universal_newlines=True,
+            )
+            if self.input:
+                self.popen.stdin.write(self.input)
+            self.popen.stdin.close()
+        elif self.typ == "f2f":
+            if self.input:
+                self.file_in = open(self.input, 'r')
+            else:
+                raise OjpackerError("popen: need input file, but get nothing")
+            if self.output:
+                self.file_out = open(self.output, 'w')
+            else:
+                raise OjpackerError("popen: need output file, but get nothing")
+            self.popen = subprocess.Popen(
+                shlex.split(self.cmd),
+                stdin=self.file_in,
+                stdout=self.file_out,
+                stderr=None,
+                universal_newlines=True,
+            )
+        self.is_start = True
+        self.start_time = time.time()
+        ui.debug(
+            "popen start:",
+            self.cmd,
+            "in:",
+            self.input,
+            "out:",
+            self.output,
         )
-        ui.debug("popen_s2s done:", process.args, "return:", process.stdout)
-        return process.stdout
-    except subprocess.TimeoutExpired as err:
-        raise OjpackerError(
-            "Command '{command}' timed out after {time} seconds".format(
-                command=" ".join(err.cmd),
-                time=err.timeout,
-            ))
-    except subprocess.CalledProcessError as err:
-        raise OjpackerError(
-            "Command '{command}' returned non-zero exit status {code}".format(
-                command=" ".join(err.cmd),
-                code=err.returncode,
-            ))
+
+    def check(self) -> bool:
+        """
+        Check whether it is completed, and close the file. 
+        if it's completed, check the returncode and raise NonZeroExit
+        """
+        if not self.is_start:
+            return False
+        returncode = self.popen.poll()
+        if returncode is None:
+            return False
+        if self.typ[0] == 'f':
+            self.file_in.close()
+        if self.typ[2] == 'f':
+            self.file_out.close()
+        if (not self.check_return) or returncode == 0:
+            return True
+        else:
+            raise OjpackerError(
+                f"Command '{self.cmd}' returned non-zero exit status {returncode}"
+            )
+
+    def join(self) -> None:
+        """
+        wait until time out. will raise Timeout or NonZeroExit
+        """
+        if self.check():
+            return
+        if not self.is_start:
+            self.start()
+        pass_time = time.time() - self.start_time
+        if self.max_time and pass_time > self.max_time:
+            raise OjpackerError(
+                f"Command '{self.cmd}' timed out after {int(pass_time)} seconds"
+            )
+        try:
+            self.popen.wait(
+                timeout=self.max_time and (self.max_time - pass_time))
+            self.check()
+        except subprocess.TimeoutExpired:
+            raise OjpackerError(
+                f"Command '{self.cmd}' timed out after {int(time.time() - self.start_time)} seconds"
+            )
+
+    def halt(self) -> None:
+        if self.is_start and self.popen.poll() is None:
+            self.popen.kill()
+
+    def get_out(self) -> str:
+        if not self.check():
+            self.join()
+        return self.popen.stdout.read()
 
 
 def file_head(file_name: str) -> str:
@@ -150,37 +166,46 @@ def check_empty(check_list: List[str]) -> bool:
     return have_err
 
 
-def exec_thread_pool(thread_pool: List[threading.Thread],
-                     multi_thread: bool = False) -> None:
-    ui.debug(f"exec_thread_pool, multi_thread: {multi_thread}")
+def execute_pool(
+        pool: List[popen],
+        multi_thread: bool = False,
+) -> None:
+    ui.debug(f"execute_pool: multi_thread {multi_thread}")
     if not multi_thread:
         with ui.progress() as progress:
-            mask = progress.add_task("running...", total=len(thread_pool))
-            for thread in thread_pool:
-                thread.start()
-                thread.join()
+            mask = progress.add_task("running...", total=len(pool))
+            for p in pool:
+                p.start()
+                p.join()
                 progress.advance(mask)
-    else:
-        with ui.unknown_progress() as progress:
-            masks = [
-                progress.add_task(f"No.{i+1}", start=False)
-                for i in range(len(thread_pool))
-            ]
-            completed = [False for i in range(len(thread_pool))]
-            for i in range(len(thread_pool)):
-                thread_pool[i].start()
-            end_cnt = 0
-            while end_cnt != len(thread_pool):
-                time.sleep(0.2)
-                end_cnt = 0
-                for i in range(len(thread_pool)):
-                    if not thread_pool[i].is_alive():
+        return
+
+    with ui.unknown_progress() as progress:
+        masks = [
+            progress.add_task(f"No.{i+1}", start=False)
+            for i in range(len(pool))
+        ]
+        completed = [False for i in range(len(pool))]
+        for p in pool:
+            p.start()
+        end_cnt = 0
+        while end_cnt != len(pool):
+            time.sleep(0.2)
+            for i in range(len(pool)):
+                try:
+                    if not completed[i] and pool[i].check():
+                        ui.debug(f"subprocess {i} done")
                         end_cnt += 1
-                        if not completed[i]:
-                            progress.start_task(masks[i])
-                            progress.update(
-                                masks[i],
-                                completed=100,
-                                refresh=True,
-                            )
-                            completed[i] = True
+                        progress.start_task(masks[i])
+                        progress.update(
+                            masks[i],
+                            completed=100,
+                            refresh=True,
+                        )
+                        completed[i] = True
+                except OjpackerError as e:
+                    for p in pool:
+                        p.halt()
+                    ui.error(str(e))
+                    raise OjpackerError(
+                        f"execute_pool: subprocess {i} get Non-zero exit")
