@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import sys
 import time
 from functools import partial
-from typing import Dict, Union
+from typing import Union
 
 from rich.console import Console
 from rich.progress import BarColumn, Progress, TimeRemainingColumn
@@ -22,6 +22,14 @@ error = partial(console.log, "[red]ERROR[/red]  ")
 warning = partial(console.log, "[yellow]WARNING[/yellow]")
 info = partial(console.log, "[blue]INFO[/blue]   ")
 debug = partial(console.log, "[green]DEBUG[/green]  ")
+
+log_level = 10
+level_table = {
+    "error": 40,
+    "warning": 30,
+    "info": 20,
+    "debug": 10,
+}
 
 # progress
 progress = partial(
@@ -65,17 +73,12 @@ def set_log_level(level: Union[int, str] = 20, ) -> None:
 
     if isinstance(level, str):
         level = level.lower()
-        level_table: Dict[str, int] = {
-            "error": 40,
-            "warning": 30,
-            "info": 20,
-            "debug": 10,
-        }
-        if level in level_table:
-            level = level_table[level]
+        if level.lower() in level_table:
+            level = level.lower()
         else:
             warning("unknown log level, use info")
-            level = level_table["info"]
+            level = "info"
+        level = level_table[level]
 
     NONE = partial(lambda *args, **kwargs: None)
 
