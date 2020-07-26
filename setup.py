@@ -9,7 +9,7 @@ setup(
     version="0.1.2",
     packages=find_packages(),
     entry_points={
-        'console_scripts': ['ojpacker = ojpacker:main'],
+        'console_scripts': ['ojpacker = ojpacker:start'],
     },
     # requires
     python_requires='>=3.6.9',
