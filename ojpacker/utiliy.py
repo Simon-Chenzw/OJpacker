@@ -4,54 +4,93 @@ import os
 import subprocess
 import threading
 import time
-from typing import List
+import shlex
+from typing import List, Optional
 
 from . import ui
+from .error import OjpackerError
 
 
-def popen_s2f(cmd: str, input_str: str, output_name: str) -> None:
+def popen_s2f(
+        cmd: str,
+        input_str: Optional[str],
+        output_name: str,
+        max_time: Optional[int] = None,
+) -> None:
     """
     get str input, and set output to file
     """
-    ui.debug(f"popen_s2f '{cmd}' '{input_str[:-1]}' '{output_name}'")
+    ui.debug(f"popen_s2f '{cmd}' '{input_str}' '{output_name}'")
     with open(output_name, 'w') as file_out:
-        popen = subprocess.Popen(cmd.split(),
-                                 stdin=subprocess.PIPE,
-                                 stdout=file_out,
-                                 universal_newlines=True)
-        popen.stdin.write(input_str)
-        popen.stdin.close()
-        popen.wait()
+        try:
+            process = subprocess.run(
+                shlex.split(cmd),
+                timeout=max_time,
+                input=input_str,
+                stdout=file_out,
+                check=True,
+                universal_newlines=True,
+            )
+            ui.debug(f"popen_s2f done: {process.args}")
+        except subprocess.TimeoutExpired as err:
+            raise OjpackerError(f"TimeoutExpired: {str(err)}")
+        except subprocess.CalledProcessError as err:
+            raise OjpackerError(f"CalledProcessError: {str(err)}")
 
 
-def popen_f2f(cmd: str, input_name: str, output_name: str) -> None:
+def popen_f2f(
+        cmd: str,
+        input_name: str,
+        output_name: str,
+        max_time: Optional[int] = None,
+) -> None:
     """
     get input from file, and set output to file
     """
     ui.debug(f"popen_f2f '{cmd}' '{input_name}' '{output_name}'")
     with open(input_name, 'r') as file_in:
         with open(output_name, 'w') as file_out:
-            popen = subprocess.Popen(cmd.split(),
-                                     stdin=file_in,
-                                     stdout=file_out,
-                                     universal_newlines=True)
-            popen.wait()
+            try:
+                process = subprocess.run(
+                    shlex.split(cmd),
+                    timeout=max_time,
+                    stdin=file_in,
+                    stdout=file_out,
+                    check=True,
+                    universal_newlines=True,
+                )
+                ui.debug(f"popen_f2f done: {process.args}")
+            except subprocess.TimeoutExpired as err:
+                raise OjpackerError(f"TimeoutExpired: {str(err)}")
+            except subprocess.CalledProcessError as err:
+                raise OjpackerError(f"CalledProcessError: {str(err)}")
 
 
-def popen_s2s(cmd: str, input_str: str = "") -> str:
+def popen_s2s(
+        cmd: str,
+        input_str: Optional[str] = None,
+        max_time: Optional[int] = None,
+) -> str:
     """
-    get str input, and return popen.stdout.read() + popen.stderr.read()
+    get str input, and return stdout & stderr
     """
-    ui.debug(f"popen_s2s '{cmd}' '{input_str[:-1]}'")
-    popen = subprocess.Popen(cmd.split(),
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             universal_newlines=True)
-    popen.stdin.write(input_str)
-    popen.stdin.close()
-    popen.wait()
-    return popen.stdout.read() + popen.stderr.read()
+    ui.debug(f"popen_s2s '{cmd}' '{input_str}'")
+    try:
+        process = subprocess.run(
+            shlex.split(cmd),
+            timeout=max_time,
+            input=input_str,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=True,
+            universal_newlines=True,
+        )
+        ui.debug(f"popen_s2s done: {process.args} return: {process.stdout}")
+        return process.stdout
+    except subprocess.TimeoutExpired as err:
+        raise OjpackerError(f"TimeoutExpired: {str(err)}")
+    except subprocess.CalledProcessError as err:
+        raise OjpackerError(f"CalledProcessError: {str(err)}")
 
 
 def file_head(file_name: str) -> str:
