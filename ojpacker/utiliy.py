@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
 import os
+import shlex
 import subprocess
 import threading
 import time
-import shlex
 from typing import List, Optional
 
 from . import ui
@@ -32,11 +32,20 @@ def popen_s2f(
                 check=check,
                 universal_newlines=True,
             )
-            ui.debug(f"popen_s2f done: {process.args}")
+            ui.debug("popen_s2s done:", process.args)
         except subprocess.TimeoutExpired as err:
-            raise OjpackerError(f"TimeoutExpired: {str(err)}")
+            raise OjpackerError(
+                "Command '{command}' timed out after {time} seconds".format(
+                    command=" ".join(err.cmd),
+                    time=err.timeout,
+                ))
         except subprocess.CalledProcessError as err:
-            raise OjpackerError(f"CalledProcessError: {str(err)}")
+            raise OjpackerError(
+                "Command '{command}' returned non-zero exit status {code}".
+                format(
+                    command=" ".join(err.cmd),
+                    code=err.returncode,
+                ))
 
 
 def popen_f2f(
@@ -61,11 +70,21 @@ def popen_f2f(
                     check=check,
                     universal_newlines=True,
                 )
-                ui.debug(f"popen_f2f done: {process.args}")
+                ui.debug("popen_s2s done:", process.args)
             except subprocess.TimeoutExpired as err:
-                raise OjpackerError(f"TimeoutExpired: {str(err)}")
+                raise OjpackerError(
+                    "Command '{command}' timed out after {time} seconds".
+                    format(
+                        command=" ".join(err.cmd),
+                        time=err.timeout,
+                    ))
             except subprocess.CalledProcessError as err:
-                raise OjpackerError(f"CalledProcessError: {str(err)}")
+                raise OjpackerError(
+                    "Command '{command}' returned non-zero exit status {code}".
+                    format(
+                        command=" ".join(err.cmd),
+                        code=err.returncode,
+                    ))
 
 
 def popen_s2s(
@@ -89,12 +108,20 @@ def popen_s2s(
             check=check,
             universal_newlines=True,
         )
-        ui.debug(f"popen_s2s done: {process.args} return: {process.stdout}")
+        ui.debug("popen_s2s done:", process.args, "return:", process.stdout)
         return process.stdout
     except subprocess.TimeoutExpired as err:
-        raise OjpackerError(f"TimeoutExpired: {str(err)}")
+        raise OjpackerError(
+            "Command '{command}' timed out after {time} seconds".format(
+                command=" ".join(err.cmd),
+                time=err.timeout,
+            ))
     except subprocess.CalledProcessError as err:
-        raise OjpackerError(f"CalledProcessError: {str(err)}")
+        raise OjpackerError(
+            "Command '{command}' returned non-zero exit status {code}".format(
+                command=" ".join(err.cmd),
+                code=err.returncode,
+            ))
 
 
 def file_head(file_name: str) -> str:
