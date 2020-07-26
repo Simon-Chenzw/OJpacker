@@ -15,6 +15,7 @@ def popen_s2f(
         cmd: str,
         input_str: Optional[str],
         output_name: str,
+        check: bool = True,
         max_time: Optional[int] = None,
 ) -> None:
     """
@@ -28,7 +29,7 @@ def popen_s2f(
                 timeout=max_time,
                 input=input_str,
                 stdout=file_out,
-                check=True,
+                check=check,
                 universal_newlines=True,
             )
             ui.debug(f"popen_s2f done: {process.args}")
@@ -42,6 +43,7 @@ def popen_f2f(
         cmd: str,
         input_name: str,
         output_name: str,
+        check: bool = True,
         max_time: Optional[int] = None,
 ) -> None:
     """
@@ -56,7 +58,7 @@ def popen_f2f(
                     timeout=max_time,
                     stdin=file_in,
                     stdout=file_out,
-                    check=True,
+                    check=check,
                     universal_newlines=True,
                 )
                 ui.debug(f"popen_f2f done: {process.args}")
@@ -69,6 +71,8 @@ def popen_f2f(
 def popen_s2s(
         cmd: str,
         input_str: Optional[str] = None,
+        capture_output: bool = True,
+        check: bool = True,
         max_time: Optional[int] = None,
 ) -> str:
     """
@@ -80,9 +84,9 @@ def popen_s2s(
             shlex.split(cmd),
             timeout=max_time,
             input=input_str,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=True,
+            stdout=subprocess.PIPE if capture_output else None,
+            stderr=subprocess.STDOUT if capture_output else None,
+            check=check,
             universal_newlines=True,
         )
         ui.debug(f"popen_s2s done: {process.args} return: {process.stdout}")
