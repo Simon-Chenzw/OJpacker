@@ -130,23 +130,30 @@ def compile(file: filetype.execfile) -> None:
         return
 
     ui.info(f"compile {file.src} to {file.exe}")
-    message = utiliy.popen_s2s(file.get_compile(exe_dir="temp"))
+    message = utiliy.popen_s2s(file.get_compile(exe_dir="temp"), check=False)
     exe_path = os.path.join("temp", file.exe)
     ui.debug(f"check {exe_path}, {os.path.isfile(exe_path)}")
     if not os.path.isfile(exe_path):
-        ui.warning(
-            "-----compile message-----\n",
-            message,
-            "\n         -----compile message-----",
-        )
+        if message:
+            if ui.log_level <= ui.level_table["warning"]:
+                ui.console.print("[yellow]-----compile message-----")
+                utiliy.popen_s2s(
+                    file.get_compile(exe_dir="temp"),
+                    capture_output=False,
+                    check=False,
+                )
+                ui.console.print("[yellow]-----compile message-----")
+        else:
+            ui.warning("no compile message")
         raise OjpackerError(f"compilation failed, {exe_path} not found")
     else:
         if message:
-            ui.debug(
-                "-----compile message-----\n",
-                message,
-                "\n         -----compile message-----",
-            )
+            if ui.log_level <= ui.level_table["debug"]:
+                ui.console.print("[green]-----compile message-----")
+                ui.console.print(message)
+                ui.console.print("[green]-----compile message-----")
+        else:
+            ui.debug("no compile message")
         ui.debug(f"add {exe_path} to garbage")
         garbage.append(exe_path)
 
@@ -160,7 +167,11 @@ def make_input(
 ) -> None:
     ui.debug("read state")
     with open(state_name, "r") as state_file:
-        state = state_file.readlines()
+        state = list(
+            map(
+                lambda line: line.rstrip('\n'),
+                state_file.readlines(),
+            ))
     if len(state) != 0:
         ui.info(f"{len(state)} line(s) in state")
     else:
