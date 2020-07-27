@@ -168,10 +168,10 @@ def check_empty(check_list: List[str]) -> bool:
 
 def execute_pool(
         pool: List[popen],
-        multi_thread: bool = False,
+        max_process: int = -1,
 ) -> None:
-    ui.debug(f"execute_pool: multi_thread {multi_thread}")
-    if not multi_thread:
+    ui.debug(f"execute_pool: max_process {max_process}")
+    if max_process == -1:
         with ui.progress() as progress:
             mask = progress.add_task("running...", total=len(pool))
             for p in pool:
@@ -181,19 +181,18 @@ def execute_pool(
         return
 
     with ui.unknown_progress() as progress:
-        masks = [
-            progress.add_task(f"No.{i+1}", start=False)
-            for i in range(len(pool))
-        ]
+        masks = []
         completed = [False for i in range(len(pool))]
-        for p in pool:
-            p.start()
-        end_cnt = 0
+        for i in range(max_process if max_process else len(pool)):
+            masks.append(progress.add_task(f"No.{i+1}", start=False))
+            pool[i].start()
+        nxt, end_cnt = max_process if max_process else len(pool), 0
         while end_cnt != len(pool):
-            time.sleep(0.2)
+            time.sleep(0.1)
             for i in range(len(pool)):
                 try:
                     if not completed[i] and pool[i].check():
+                        # completed this
                         ui.debug(f"subprocess {i} done")
                         end_cnt += 1
                         progress.start_task(masks[i])
@@ -203,6 +202,13 @@ def execute_pool(
                             refresh=True,
                         )
                         completed[i] = True
+                        # start next
+                        if nxt < len(pool):
+                            ui.debug(f"subprocess {nxt} start")
+                            masks.append(
+                                progress.add_task(f"No.{nxt+1}", start=False))
+                            pool[nxt].start()
+                            nxt += 1
                 except OjpackerError as e:
                     for p in pool:
                         p.halt()

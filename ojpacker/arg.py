@@ -97,10 +97,14 @@ def get_parser() -> argparse.ArgumentParser:
         dest="zip_list",
     )
     parser.add_argument(
-        "-multithreading",
-        action='store_true',
-        help="Use multithreading when executing programs",
-        dest="multi_thread",
+        "-multiprocess",
+        nargs='?',
+        type=int,
+        const=0,
+        default=-1,
+        help="Use multiprocess when executing programs",
+        metavar="Max",
+        dest="max_process",
     )
 
     # config
@@ -169,7 +173,7 @@ def run_call(args: argparse.Namespace) -> None:
         show_output="output" in args.show,
         zip=args.zip,
         zip_list=args.zip_list,
-        multi_thread=args.multi_thread,
+        max_process=args.max_process,
     )
 
 

@@ -53,7 +53,7 @@ def work(
         show_output: bool = False,
         zip: bool = False,
         zip_list: List[str] = [],
-        multi_thread: bool = False,
+        max_process: int = -1,
 ) -> None:
     """
     main function of workflow
@@ -116,7 +116,7 @@ def work(
             input_data_name,
             input_exec,
             show_input,
-            multi_thread,
+            max_process,
         )
     else:
         ui.info("skip the input phase")
@@ -130,7 +130,7 @@ def work(
             output_data_name,
             output_exec,
             show_output,
-            multi_thread,
+            max_process,
         )
     else:
         ui.info("skip the output stage")
@@ -195,7 +195,7 @@ def make_input(
         input_data_name: str,
         input_exec: filetype.execfile,
         show: bool = False,
-        multi_thread: bool = False,
+        max_process: int = -1,
 ) -> None:
     ui.debug("read state")
     with open(state_name, "r") as state_file:
@@ -221,7 +221,7 @@ def make_input(
             ),
         ) for i in range(len(state)) if len(state[i].split()) != 0
     ]
-    utiliy.execute_pool(pool, multi_thread)
+    utiliy.execute_pool(pool, max_process)
 
     # check empty
     utiliy.check_empty([
@@ -252,8 +252,8 @@ def make_output(
         input_data_name: str,
         output_data_name: str,
         output_exec: filetype.execfile,
-        show: bool,
-        multi_thread: bool,
+        show: bool = False,
+        max_process: int = -1,
 ) -> None:
 
     # make output data
@@ -277,7 +277,7 @@ def make_output(
         i += 1
     ui.info(f"{len(pool)} inputs file detected")
     ui.info(f"running {output_exec.exe}")
-    utiliy.execute_pool(pool, multi_thread)
+    utiliy.execute_pool(pool, max_process)
 
     #check empty
     utiliy.check_empty([
