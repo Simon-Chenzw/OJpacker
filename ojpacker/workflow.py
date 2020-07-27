@@ -8,7 +8,35 @@ from typing import List, Optional
 from . import filetype, ui, utiliy
 from .error import OjpackerError
 
-garbage: List[str] = []
+
+class Garbage:
+    def __init__(self) -> None:
+        self.garbage: List[str] = []
+
+    def add(self, *arg: str) -> None:
+        """
+        everything should in temporary directory
+        """
+        for file_name in arg:
+            ui.debug(f"add '{file_name}'' to garbage")
+            self.garbage.append(file_name)
+
+    def clean(self, clean_dir: bool = False) -> None:
+        if clean_dir:
+            ui.debug("clean up the entire temporary directory")
+            shutil.rmtree("temp")
+            self.garbage.clear()
+        else:
+            ui.debug("clean garbage", self.garbage)
+            for file_name in self.garbage:
+                if not os.path.isfile(file_name):
+                    ui.warning(f"garbage '{file_name}' not found")
+                    continue
+                os.remove(file_name)
+            self.garbage.clear()
+
+
+garbage = Garbage()
 
 
 def work(
@@ -108,9 +136,9 @@ def work(
         ui.info("skip the output stage")
 
     # zip part
-    clean(clean_dir=False)
+    garbage.clean()
     zipped(zip, zip_name, zip_list)
-    clean(clean_dir=True)
+    garbage.clean(clean_dir=True)
 
 
 def mkdir_temp() -> None:
@@ -159,8 +187,7 @@ def compile(file: filetype.execfile) -> None:
                 ui.console.print("[green]-----compile message-----")
         else:
             ui.debug("no compile message")
-        ui.debug(f"add {exe_path} to garbage")
-        garbage.append(exe_path)
+        garbage.add(exe_path)
 
 
 def make_input(
@@ -314,17 +341,3 @@ def zipped(
     else:
         shutil.move("temp", zip_name)
         ui.info(f"data has been stored in directory '{zip_name}'")
-
-
-def clean(clean_dir: bool) -> None:
-    if clean_dir:
-        ui.debug("clean up the entire temporary directory")
-        shutil.rmtree("temp")
-    else:
-        ui.debug("clean garbage", garbage)
-        for file_name in garbage:
-            if not os.path.isfile(file_name):
-                ui.warning(f"garbage '{file_name}' not found")
-                continue
-            os.remove(file_name)
-        garbage.clear()
