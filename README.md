@@ -13,7 +13,7 @@ a script can packer test data for Olympic informatics Online Judge
 
 ## 环境要求 (probably)
 + python >= 3.6.9
-+ [rich](https://github.com/willmcgugan/rich) >= 3.0
++ [rich](https://github.com/willmcgugan/rich) >= 4.1
 
 # 文档
 ## 目录：
