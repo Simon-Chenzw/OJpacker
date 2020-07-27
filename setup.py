@@ -6,7 +6,7 @@ with open("README.md", "r") as fp:
 setup(
     # package
     name="ojpacker",
-    version="0.1.2",
+    version="0.1.3",
     packages=find_packages(),
     entry_points={
         'console_scripts': ['ojpacker = ojpacker:start'],
@@ -14,7 +14,7 @@ setup(
     # requires
     python_requires='>=3.6.9',
     install_requires=[
-        'rich>=3',
+        'rich>=4.1',
     ],
     # description
     description=

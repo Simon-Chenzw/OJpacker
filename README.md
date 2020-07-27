@@ -5,8 +5,11 @@ a script can packer test data for Olympic informatics Online Judge
 ## 简单使用指南
 + 安装: `pip3 install ojpacker`
 + 更新: `pip3 install --upgrade ojpacker`
-+ 运行: 直接在终端中输入 `ojpacker` ，即可在当前目录运行
-+ 演示: 运行 `ojpacker demo` 可以生成demo文件夹
++ 运行:
+    1. 直接在终端中输入 `ojpacker` ，即可在当前目录运行
+        * 需要 pip 自动添加的脚本的所在目录在 `PATH` 中，若提示 `ojpacker` 不存在，请检查 `PATH`
+    2. 运行 `python3 -m ojpacker`
++ 演示: 运行 `ojpacker demo` 可以生成demo文件夹，内含几个文件，在预配置的编译命令正确的情况下可以直接运行
 
 ## 环境要求 (probably)
 + python >= 3.6.9
@@ -95,8 +98,8 @@ a script can packer test data for Olympic informatics Online Judge
 * `-addzip FILE...` :
     后接参数为文件名，这些文件将会在构造完数据之后一起压缩，或移动至文件夹中
 
-* `-multithreading` :
-    使用多线程运行 make_in 与 make_out
+* `-multiprocess [Max]` :
+    使用多进程运行 make_in 与 make_out ，Max 为最大进程数，不指定为无上限
 
 ### config命令
 config 是配置文件相关的命令，单独运行无效果
