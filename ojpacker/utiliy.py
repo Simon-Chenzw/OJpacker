@@ -31,7 +31,7 @@ class popen:
         self.check_return = check_return
         self.max_time = max_time
         self.is_start = False
-        ui.debug("popen create:", cmd, "in:", input, "out:", output)
+        ui.debug("popen create:", f"'{cmd}''", "in:", input, "out:", output)
 
     def start(self) -> None:
         if self.typ == "s2s":
@@ -80,7 +80,7 @@ class popen:
         self.start_time = time.time()
         ui.debug(
             "popen start:",
-            self.cmd,
+            f"'{self.cmd}''",
             "in:",
             self.input,
             "out:",
