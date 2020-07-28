@@ -5,38 +5,8 @@ import shutil
 import threading
 from typing import List, Optional
 
-from . import filetype, ui, utiliy
+from . import filetype, ui, utiliy, garbage
 from .error import OjpackerError
-
-
-class Garbage:
-    def __init__(self) -> None:
-        self.garbage: List[str] = []
-
-    def add(self, *arg: str) -> None:
-        """
-        everything should in temporary directory
-        """
-        for file_name in arg:
-            ui.debug(f"add '{file_name}'' to garbage")
-            self.garbage.append(file_name)
-
-    def clean(self, clean_dir: bool = False) -> None:
-        if clean_dir:
-            ui.debug("clean up the entire temporary directory")
-            shutil.rmtree("temp")
-            self.garbage.clear()
-        else:
-            ui.debug("clean garbage", self.garbage)
-            for file_name in self.garbage:
-                if not os.path.isfile(file_name):
-                    ui.warning(f"garbage '{file_name}' not found")
-                    continue
-                os.remove(file_name)
-            self.garbage.clear()
-
-
-garbage = Garbage()
 
 
 def work(
