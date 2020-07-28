@@ -2,7 +2,8 @@ from __future__ import absolute_import
 
 import os
 from typing import Dict
-from . import ui
+
+from . import config, ui
 from .error import OjpackerError
 
 
@@ -66,7 +67,10 @@ class data_file():
         self.path = path
 
     def __getitem__(self, index: int) -> str:
-        return self.origin.format(num=index + 1)
+        return self.origin.format(
+            num=index + 1,
+            name=config.zip_name,
+        )
 
     def with_path(self, index: int) -> str:
         return os.path.join(self.path, self[index])

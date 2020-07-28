@@ -130,11 +130,10 @@ json内容为字典，以下是各个键值的意义
     * `state_name` :
         state 文件的名字
 
-    * `input_data_name` :
-        in数据的文件名，使用 `{num}` 代替数字，从1开始编号
-
-    * `output_data_name` :
-        out数据的文件名，使用 `{num}` 代替数字，从1开始编号
+    * `input_data_name` & `output_data_name`:
+        in/out 数据的文件名。可使用的宏:
+        + `{num}` : 数据点编号，从1开始
+        + `{name}` : 题目名字
 
     * `input_default_exec` :
         默认使用的 make_in 文件代号
