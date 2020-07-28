@@ -5,6 +5,7 @@ from typing import Dict
 
 from . import config, ui
 from .error import OjpackerError
+from .ui import log
 
 
 class execfile:
@@ -12,6 +13,7 @@ class execfile:
     a class save the description of the execute file.  
     you can you macro {src} {exe} in "command" 
     """
+    @log
     def __init__(self,
                  src: str = "",
                  exe: str = "",
@@ -41,8 +43,8 @@ def get_execfile(dic: Dict[str, str]) -> execfile:
 
 
 class state_file():
+    @log
     def __init__(self, name: str) -> None:
-        ui.debug("read state")
         with open(name, "r") as state_file:
             self.lines = tuple(
                 map(
@@ -62,6 +64,7 @@ class state_file():
 
 
 class data_file():
+    @log
     def __init__(self, origin: str, path: str = "temp") -> None:
         self.origin = origin
         self.path = path

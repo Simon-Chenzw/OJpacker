@@ -5,8 +5,10 @@ from typing import List
 
 from . import config, filetype, ui, utiliy
 from .error import OjpackerError
+from .ui import log
 
 
+@log
 def precheck() -> None:
     if config.output_exec is not None:
         if not os.path.isfile(config.output_exec.src):
@@ -29,11 +31,11 @@ def precheck() -> None:
             ui.warning("'output_data_name' don't have macro {num}")
 
 
+@log
 def run() -> None:
     if config.output_exec is None:
         ui.info("skip the output stage")
         return
-    ui.debug("output phase start")
     input_data = filetype.data_file(config.input_data_name,
                                     path=config.input_dir)
     output_data = filetype.data_file(config.output_data_name)
@@ -58,7 +60,6 @@ def run() -> None:
 
     #print output
     if config.show_output:
-        ui.debug("show output")
         detail = [
             "   {name} : {content}".format(
                 name="[purple]{:<10}[/purple]".format(output_data[i]),

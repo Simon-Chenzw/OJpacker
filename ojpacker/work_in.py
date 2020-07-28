@@ -4,8 +4,10 @@ import os
 
 from . import config, filetype, ui, utiliy
 from .error import OjpackerError
+from .ui import log
 
 
+@log
 def precheck() -> None:
     if config.input_exec is not None:
         if not os.path.isfile(config.input_exec.src):
@@ -20,11 +22,11 @@ def precheck() -> None:
             ui.warning("'input_data_name' don't have macro {num}")
 
 
+@log
 def run() -> None:
     if config.input_exec is None:
         ui.info("skip the input phase")
         return
-    ui.debug("input phase start")
     state = filetype.state_file(config.state_name)
     input_data = filetype.data_file(config.input_data_name)
     length = len(state)
@@ -45,7 +47,6 @@ def run() -> None:
 
     # print input
     if config.show_input:
-        ui.debug("show input")
         detail = [
             "   {name} : {content}".format(
                 name="[purple]{:<10}[/purple]".format(input_data[i]),

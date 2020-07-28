@@ -4,6 +4,7 @@ import os
 
 from . import config, ui
 from .error import OjpackerError
+from .ui import log
 
 setting = """\
 {
@@ -80,11 +81,12 @@ content_map = {
 }
 
 
+@log
 def make_demo(dir: str) -> None:
     if os.path.isfile(dir):
         raise OjpackerError(f"there is already a file named {dir}")
     if not os.path.isdir(dir):
-        ui.debug(f"make dir {dir}")
+        ui.detail(f"make dir {dir}")
         os.mkdir(dir)
 
     ui.info(f"make demo at {dir}")
@@ -105,6 +107,7 @@ def make_demo(dir: str) -> None:
     )
 
 
+@log
 def make_config() -> None:
     if os.path.isfile(config.json_name):
         ui.warning(f"already have '{config.json_name}', will be replaced")

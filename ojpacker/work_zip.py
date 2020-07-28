@@ -5,8 +5,10 @@ import shutil
 
 from . import config, ui
 from .error import OjpackerError
+from .ui import log
 
 
+@log
 def precheck() -> None:
     if config.will_zip:
         if config.zip_name == "":
@@ -16,6 +18,7 @@ def precheck() -> None:
                 ui.warning(f"'{file}' in zip_list, does not exist")
 
 
+@log
 def run() -> None:
     def readable_byte(value: float) -> str:
         unit = ["B", "KB", "MB", "GB"]
@@ -25,7 +28,6 @@ def run() -> None:
             level += 1
         return "%.2f %s" % (value, unit[level])
 
-    ui.debug("zip phase start")
     # 复制 zip_list
     if config.zip_list:
         for file_name in config.zip_list:

@@ -4,24 +4,27 @@ import os
 
 from . import config, filetype, garbage, ui, utiliy
 from .error import OjpackerError
+from .ui import log
 
 
+@log
 def precheck() -> None:
     pass
 
 
+@log
 def run() -> None:
-    ui.debug("compile phase start")
     if config.input_exec is not None:
         compile(config.input_exec)
     if config.output_exec is not None:
         compile(config.output_exec)
 
 
+@log
 def compile(file: filetype.execfile) -> None:
 
     if not file.compile_cmd:
-        ui.debug(f"{file.src} don't have compile command, skip compile")
+        ui.detail(f"{file.src} don't have compile command, skip compile")
         return
 
     ui.info(f"compile {file.src} to {file.exe}")
@@ -31,7 +34,7 @@ def compile(file: filetype.execfile) -> None:
         check_return=False,
     ).get_out()
     exe_path = os.path.join("temp", file.exe)
-    ui.debug(f"check {exe_path}, {os.path.isfile(exe_path)}")
+    ui.detail(f"check {exe_path}, {os.path.isfile(exe_path)}")
     if os.path.isfile(exe_path):
         if message:
             if ui.log_level <= ui.level_table["debug"]:
@@ -39,7 +42,7 @@ def compile(file: filetype.execfile) -> None:
                 ui.console.print(message)
                 ui.console.print("[green]-----compile message-----")
         else:
-            ui.debug("no compile message")
+            ui.detail("no compile message")
         garbage.add(exe_path)
     else:
         if message:

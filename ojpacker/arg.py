@@ -4,6 +4,7 @@ import argparse
 from typing import Optional, Sequence, Text
 
 from . import config, demo, ui, workflow
+from .ui import log
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -151,12 +152,12 @@ def analyze(argv: Optional[Sequence[Text]]) -> None:
     parser = get_parser()
     ans = parser.parse_args(argv)
     ui.set_log_level(ans.log_level)
-    ui.debug(argv)
-    ui.debug(ans)
+    ui.detail("argv:", argv)
     ans.func(ans)
 
 
 # call workflow
+@log
 def run_call(args: argparse.Namespace) -> None:
     config.load_setting()
     config.zip_name = args.name or config.zip_name
@@ -174,6 +175,7 @@ def run_call(args: argparse.Namespace) -> None:
 
 
 # call config
+@log
 def config_call(args: argparse.Namespace) -> None:
     if args.create_demo_config:
         demo.make_config()
@@ -182,5 +184,6 @@ def config_call(args: argparse.Namespace) -> None:
 
 
 # call demo
+@log
 def demo_call(args: argparse.Namespace) -> None:
     demo.make_demo(args.demo_dir)

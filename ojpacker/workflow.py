@@ -4,8 +4,10 @@ import os
 import shutil
 
 from . import config, garbage, ui, work_compile, work_in, work_out, work_zip
+from .ui import log
 
 
+@log
 def work() -> None:
     """
     main function of workflow
@@ -14,6 +16,7 @@ def work() -> None:
     run()
 
 
+@log
 def precheck() -> None:
     if (config.input_exec is None) and (config.output_exec is None):
         ui.warning("both input phase and output phase will be skipped")
@@ -25,6 +28,7 @@ def precheck() -> None:
     work_zip.precheck()
 
 
+@log
 def run() -> None:
     mkdir_temp()
     work_compile.run()
@@ -35,12 +39,11 @@ def run() -> None:
     garbage.clean(clean_dir=True)
 
 
+@log
 def mkdir_temp() -> None:
     # mkdir
     if config.input_exec is not None:
         if os.path.isdir("temp"):
-            ui.warning("'temp' already exists, will be [red]deleted[/red]")
+            ui.warning("'temp' already exists, [red]deleted[/red]")
             shutil.rmtree("temp")
-            ui.debug("remove directory 'temp'")
-        ui.debug("create directory 'temp'")
         os.mkdir("temp")

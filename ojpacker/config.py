@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from . import filetype, ui
 from .error import OjpackerError
+from .ui import log
 
 # config
 ## from json
@@ -56,10 +57,10 @@ def load_setting(path: Optional[str] = None) -> None:
             if os.path.isfile(user_setting):
                 ui.info("use local config")
             else:
-                ui.debug("use local config")
+                ui.detail("use local config")
         elif os.path.isfile(user_setting):
             setting_json = user_setting
-            ui.debug("use user config")
+            ui.detail("use user config")
         else:
             raise OjpackerError("No user or local configuration found")
 
@@ -74,13 +75,14 @@ def load_setting(path: Optional[str] = None) -> None:
             if name in file_setting:
                 globals()[config_map[name]] = file_setting.get(name)
             else:
-                ui.debug(f"'{name}' not in json")
+                ui.detail(f"'{name}' not in json")
         set_input_exec(input_default_exec)
         set_output_exec(output_default_exec)
     else:
         raise OjpackerError("wrong json format")
 
 
+@log
 def set_input_exec(name: str) -> None:
     global input_exec
     if name in input_exec_map:
@@ -89,6 +91,7 @@ def set_input_exec(name: str) -> None:
         input_exec = None
 
 
+@log
 def set_output_exec(name: str) -> None:
     global output_exec
     if name in output_exec_map:
@@ -97,6 +100,7 @@ def set_output_exec(name: str) -> None:
         output_exec = None
 
 
+@log
 def copyto(copyto: str) -> None:
     if copyto == "user":
         src = json_name
