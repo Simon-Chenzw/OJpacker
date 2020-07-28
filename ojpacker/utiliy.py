@@ -158,7 +158,7 @@ def check_empty(check_list: List[str]) -> bool:
     have_err = False
     for name in check_list:
         if not os.path.isfile(name):
-            ui.warning(f"after making input, '{name}' not found")
+            ui.warning(f"'{name}' not found")
             continue
         if os.path.getsize(name) == 0:
             ui.warning(f"'{name}' is empty")

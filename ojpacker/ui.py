@@ -9,10 +9,9 @@ from rich.console import Console
 from rich.progress import BarColumn, Progress, TimeRemainingColumn
 
 #console
-console = Console(
-    file=sys.stderr,
-    log_path=False,
-)
+console = Console(file=sys.stderr,
+                  # log_path=False,
+                  )
 
 # rich print
 rprint = console.log

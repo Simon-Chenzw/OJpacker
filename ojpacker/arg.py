@@ -159,22 +159,18 @@ def analyze(argv: Optional[Sequence[Text]]) -> None:
 # call workflow
 def run_call(args: argparse.Namespace) -> None:
     config.load_setting()
-    workflow.work(
-        zip_name=args.name or config.defalut_zip_name,
-        state_name=config.state_name,
-        input_data_name=config.input_data_name,
-        output_data_name=config.output_data_name,
-        input_exec=config.get_input_exec(args.input_exec_type
-                                         or config.input_default_exec),
-        output_exec=config.get_output_exec(args.output_exec_type
-                                           or config.output_default_exec),
-        input_dir=args.input_dir,
-        show_input="input" in args.show,
-        show_output="output" in args.show,
-        zip=args.zip,
-        zip_list=args.zip_list,
-        max_process=args.max_process,
-    )
+    config.zip_name = args.name or config.zip_name
+    if args.input_exec_type:
+        config.set_input_exec(args.input_exec_type)
+    if args.output_exec_type:
+        config.set_output_exec(args.output_exec_type)
+    config.input_dir = args.input_dir
+    config.show_input = "input" in args.show
+    config.show_output = "output" in args.show
+    config.will_zip = args.zip
+    config.zip_list = args.zip_list
+    config.max_process = args.max_process
+    workflow.work()
 
 
 # call config

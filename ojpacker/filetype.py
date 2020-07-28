@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import os
 from typing import Dict
+from . import ui
+from .error import OjpackerError
 
 
 class execfile:
@@ -35,3 +37,36 @@ def get_execfile(dic: Dict[str, str]) -> execfile:
         compile_cmd=dic.get("compile_cmd", ""),
         execute_cmd=dic.get("execute_cmd", ""),
     )
+
+
+class state_file():
+    def __init__(self, name: str) -> None:
+        ui.debug("read state")
+        with open(name, "r") as state_file:
+            self.lines = tuple(
+                map(
+                    lambda line: line.rstrip('\n'),
+                    state_file.readlines(),
+                ))
+        if len(self.lines) != 0:
+            ui.info(f"{len(self.lines)} line(s) in state")
+        else:
+            raise OjpackerError("state file is empty")
+
+    def __len__(self) -> int:
+        return len(self.lines)
+
+    def __getitem__(self, index: int) -> str:
+        return self.lines[index]
+
+
+class data_file():
+    def __init__(self, origin: str, path: str = "temp") -> None:
+        self.origin = origin
+        self.path = path
+
+    def __getitem__(self, index: int) -> str:
+        return self.origin.format(num=index + 1)
+
+    def with_path(self, index: int) -> str:
+        return os.path.join(self.path, self[index])

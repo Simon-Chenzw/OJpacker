@@ -3,31 +3,44 @@ from __future__ import absolute_import
 import json
 import os
 import shutil
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
+
+from typing_extensions import Literal
 
 from . import filetype, ui
 from .error import OjpackerError
 
 # config
-defalut_zip_name: str = ""
+## from json
+zip_name: str = ""
 state_name: str = ""
 input_data_name: str = ""
 output_data_name: str = ""
+input_exec: Optional[filetype.execfile] = None
+output_exec: Optional[filetype.execfile] = None
 input_default_exec: str = ""
 output_default_exec: str = ""
-input_exec: Dict[str, Dict[str, str]] = {}
-output_exec: Dict[str, Dict[str, str]] = {}
+input_exec_map: Dict[str, Dict[str, str]] = {}
+output_exec_map: Dict[str, Dict[str, str]] = {}
+## from arg
+input_dir: str = "temp"
+show_input: bool = False
+show_output: bool = False
+will_zip: bool = True
+zip_list: List[str] = []
+max_process: int = -1
 
-config_list = [
-    "defalut_zip_name",
-    "state_name",
-    "input_data_name",
-    "output_data_name",
-    "input_default_exec",
-    "output_default_exec",
-    "input_exec",
-    "output_exec",
-]
+# List[src, dst]
+config_map: Dict[str, str] = {
+    "defalut_zip_name": "zip_name",
+    "state_name": "state_name",
+    "input_data_name": "input_data_name",
+    "output_data_name": "output_data_name",
+    "input_default_exec": "input_default_exec",
+    "output_default_exec": "output_default_exec",
+    "input_exec": "input_exec_map",
+    "output_exec": "output_exec_map",
+}
 
 # file part
 json_name = "ojpacker.json"
@@ -59,24 +72,31 @@ def load_setting(path: Optional[str] = None) -> None:
             raise OjpackerError("wrong json format")
 
     if isinstance(file_setting, dict):
-        for name in config_list:
-            globals()[name] = file_setting.get(name)
+        for name in config_map:
+            if name in file_setting:
+                globals()[config_map[name]] = file_setting.get(name)
+            else:
+                ui.debug(f"'{name}' not in json")
+        set_input_exec(input_default_exec)
+        set_output_exec(output_default_exec)
     else:
         raise OjpackerError("wrong json format")
 
 
-def get_input_exec(name: str) -> Optional[filetype.execfile]:
-    if name in input_exec:
-        return filetype.get_execfile(input_exec[name])
+def set_input_exec(name: str) -> None:
+    global input_exec
+    if name in input_exec_map:
+        input_exec = filetype.get_execfile(input_exec_map[name])
     else:
-        return None
+        input_exec = None
 
 
-def get_output_exec(name: str) -> Optional[filetype.execfile]:
-    if name in output_exec:
-        return filetype.get_execfile(output_exec[name])
+def set_output_exec(name: str) -> None:
+    global output_exec
+    if name in output_exec_map:
+        output_exec = filetype.get_execfile(output_exec_map[name])
     else:
-        return None
+        output_exec = None
 
 
 def copyto(copyto: str) -> None:
