@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 
-import shutil
 import os
+import shutil
 from typing import List
+
 from . import ui
 
 files: List[str] = []

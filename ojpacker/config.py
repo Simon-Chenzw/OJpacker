@@ -3,9 +3,7 @@ from __future__ import absolute_import
 import json
 import os
 import shutil
-from typing import Any, Dict, Optional, List
-
-from typing_extensions import Literal
+from typing import Any, Dict, List, Optional
 
 from . import filetype, ui
 from .error import OjpackerError

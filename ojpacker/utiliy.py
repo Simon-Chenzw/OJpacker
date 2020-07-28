@@ -3,9 +3,9 @@ from __future__ import absolute_import
 import os
 import shlex
 import subprocess
-import threading
 import time
-from typing import List, NoReturn, Optional
+from typing import List, Optional
+
 from typing_extensions import Literal
 
 from . import ui
