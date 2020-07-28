@@ -69,23 +69,25 @@ def countdown(second: int) -> None:
 
 
 def set_log_level(level: Union[int, str] = 20, ) -> None:
-    global error, warning, info, debug
+    global error, warning, info, debug, log_level
 
     if isinstance(level, str):
-        level = level.lower()
         if level.lower() in level_table:
             level = level.lower()
         else:
             warning("unknown log level, use info")
             level = "info"
-        level = level_table[level]
+        log_level = level_table[level]
+    else:
+        log_level = level
 
     NONE = partial(lambda *args, **kwargs: None)
 
-    error = partial(console.log, "[red]ERROR[/red]  ") if level <= 40 else NONE
+    error = partial(console.log,
+                    "[red]ERROR[/red]  ") if log_level <= 40 else NONE
     warning = partial(console.log,
-                      "[yellow]WARNING[/yellow]") if level <= 30 else NONE
+                      "[yellow]WARNING[/yellow]") if log_level <= 30 else NONE
     info = partial(console.log,
-                   "[blue]INFO[/blue]   ") if level <= 20 else NONE
+                   "[blue]INFO[/blue]   ") if log_level <= 20 else NONE
     debug = partial(console.log,
-                    "[green]DEBUG[/green]  ") if level <= 10 else NONE
+                    "[green]DEBUG[/green]  ") if log_level <= 10 else NONE
