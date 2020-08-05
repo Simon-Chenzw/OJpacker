@@ -21,7 +21,11 @@ def precheck() -> None:
             if not os.path.isdir(config.input_dir):
                 raise OjpackerError(
                     f"input directory '{config.input_dir}' does not exist")
-            elif not os.path.isfile(config.output_data_name.format(num=1)):
+            elif not os.path.isfile(
+                    os.path.join(
+                        config.input_dir,
+                        config.output_data_name.format(num=1),
+                    ), ):
                 raise OjpackerError(
                     f"Unable to match '{config.output_data_name}' in directory '{config.input_dir}'"
                 )
