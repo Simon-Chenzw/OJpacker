@@ -165,3 +165,12 @@ execfile 的格式为 json 的字典，以 demo 中 C++ 的 make_in 配置为例
     注意：
     1. 若所使用的语言没有编译阶段， `exe` 与 `compile_cmd` 可留空
     2. 命令中可以使用 `{src}` 与 `{exe}` 代替相应的文件名
+
+### TODO
+* action after zip
+* split module code to more class-style
+* add default_zip_list to json
+* zip_list support macro
+* change log to json
+
+* bug: 当采取目录输入时，不会创建temp，不会拷贝in文件
